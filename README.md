@@ -1,6 +1,6 @@
 # PfN_Projekt
 Biochemi for Dummies
 
-##To Do
+## To Do
 - Fucntion to allocate and deallocate data (Protein datatype)
 
