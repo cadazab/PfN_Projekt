@@ -1,9 +1,10 @@
 #include <stdlib.h>
+#include <math.h>
 
 struct Vektor{
-  int x;
-  int y;
-  int z;
+  double x;
+  double y;
+  double z;
 }
 
 Vektor Kreuzprodukt(Vektor a, Vektor b){
@@ -13,4 +14,27 @@ Vektor Kreuzprodukt(Vektor a, Vektor b){
   ergebnis.z = a.x*b.y - a.y*b.x;
   return ergebnis;
 }
+
+double Skalarprodukt(Vektor a, Vektor b){
+  double ergebnis;
+  ergebnis = a.x*b.x + a.y*b.y + a.z*b.z;
+  return ergebnis;
+}
+
+double Betrag(Vektor a){
+  double ergebnis;
+  ergebnis = sqrt(pow(a.x,2) + pow(a.y,2) + pow(a.z,2));
+  return ergebnis;
+}
+
+Vektor Normierung(Vektor a){
+  double betrag = Betrag(a);
+  Vektor ergebnis = new Vektor;
+  ergebnis.x = a.x/betrag;
+  ergebnis.y = a.y/betrag;
+  ergebnis.z = a.z/betrag;
+  return ergebnis;
+}
+
+
   
