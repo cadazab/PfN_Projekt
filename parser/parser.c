@@ -2,6 +2,40 @@
 #include <stdlib.h>
 #include <string.h>
 
+void getInformation(char ** lines, int noflines, char* name,                    
+                    float* coordiante1, float* coordinate2, float* coordiante3) 
+{                                                                               
+    int tokenLength = 0,                                                        
+        lineLength,                                                             
+        k = 0;                                                                  
+    char ** token;                                                              
+    token = malloc(sizeof(token));                                              
+    for(int i = 0; i < noflines; i++)                                           
+    {                                                                           
+        for(int j = 0;lines[i][j] != '\n';j++)                                  
+        {                                                                       
+            if(lines[i][j] == ' ' && tokenLength != 0)                          
+            {                                                                   
+                token[k] = malloc((tokenLength)*sizeof(char));                  
+                token[k] = &lines[i][j-tokenLength];                            
+                lines[i][j] = '\0';                                             
+                tokenLength = 0;                                                
+                k++;                                                            
+            }                                                                   
+            else if(tokenLength != 0)                                           
+            {                                                                   
+                tokenLength++;                                                  
+            }                                                                   
+        }                                                                       
+        name[i] = token[1];                                                     
+        coordinate1[i] = (float)token[5];                                      
+        coordinate2[i] = (float)token[6];                                      
+        coordinate3[i] = (float)token[7];                                      
+        k = 0;                                                                  
+    }                                                                           
+                                                                                
+}  
+
 unsigned char * readFromFile(const char *filename, unsigned long *filesize)
 {
     FILE *fp = fopen(filename, "r");
