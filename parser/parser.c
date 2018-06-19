@@ -45,39 +45,73 @@ char *getProteinName(unsigned char *filecontent, unsigned long filesize)
     return name; 
 }
 
-/*void getInformation(char ** lines, int noflines, char* name,                    
-                    float* coordiante1, float* coordinate2, float* coordiante3) 
+void getInformation(char ** lines, int noflines, char** name, char** residues,  
+                    float* coordinate1, float* coordinate2, float* coordinate3) 
 {                                                                               
     int tokenLength = 0,                                                        
-        lineLength,                                                             
-        k = 0;                                                                  
-    char ** token;                                                              
-    token = malloc(sizeof(token));                                              
+        idx = 0,                                                                
+        count = 0;                                                              
+    bool previous_space = false;                                                
+    char * name_chars,                                                          
+         * residues_chars,                                                      
+         * coordinate1_chars,                                                   
+         * coordinate2_chars,                                                   
+         * coordinate3_chars;                                                   
+                                                                                
+                                                                                
     for(int i = 0; i < noflines; i++)                                           
     {                                                                           
+        name_chars = malloc(sizeof(char)*10);                                   
+        residues_chars = malloc(sizeof(char)*10);                               
+        coordinate1_chars = malloc(sizeof(char)*10);                            
+        coordinate2_chars = malloc(sizeof(char)*10);                            
+        coordinate3_chars = malloc(sizeof(char)*10);                            
         for(int j = 0;lines[i][j] != '\n';j++)                                  
         {                                                                       
-            if(lines[i][j] == ' ' && tokenLength != 0)                          
+            if(lines[i][j] == ' ' && false == previous_space)                   
             {                                                                   
-                token[k] = malloc((tokenLength)*sizeof(char));                  
-                token[k] = &lines[i][j-tokenLength];                            
-                lines[i][j] = '\0';                                             
-                tokenLength = 0;                                                
-                k++;                                                            
+                count++;                                                        
+                previous_space = true;                                          
+                idx = 0;                                                        
             }                                                                   
-            else if(tokenLength != 0)                                           
+            else if(lines[i][j] != ' ')                                         
             {                                                                   
-                tokenLength++;                                                  
+                previous_space = false;                                         
+                switch(count)                                                   
+                {                                                               
+                    case 2: name_chars[idx] = lines[i][j];                      
+                            idx++;                                              
+                            break;                                              
+                    case 3: residues_chars[idx] = lines[i][j];                  
+                            idx++;                                              
+                            break;                                              
+                    case 6: coordinate1_chars[idx] = lines[i][j];               
+                            idx++;                                              
+                            break;                                              
+                    case 7: coordinate2_chars[idx] = lines[i][j];               
+                            idx++;                                              
+                            break;                                              
+                    case 8: coordinate3_chars[idx] = lines[i][j];               
+                            idx++;                                              
+                            break;                                              
+                }                                                               
             }                                                                   
         }                                                                       
-        name[i] = token[1];                                                     
-        coordinate1[i] = (float)token[5];                                      
-        coordinate2[i] = (float)token[6];                                      
-        coordinate3[i] = (float)token[7];                                      
-        k = 0;                                                                  
+        printf("%s\n",name_chars);                                              
+        name[i] = name_chars;                                                   
+        residues[i] = residues_chars;                                           
+        sscanf(coordinate1_chars,"%f",&coordinate1[i]);                         
+        sscanf(coordinate2_chars,"%f",&coordinate2[i]);                         
+        sscanf(coordinate3_chars,"%f",&coordinate3[i]);                         
+        free(name_chars);                                                       
+        free(residues_chars);                                                   
+        free(coordinate1_chars);                                                
+        free(coordinate2_chars);                                                
+        free(coordinate3_chars);                                                
     }                                                                           
-                                                                                
-}*/  
+    printf("%s %s %.2f %.2f %.2f\n",name[0],residues[0],coordinate1[0],
+           coordinate2[0],coordinate3[0]);
+}                                                                                             
 
 unsigned char * readFromFile(const char *filename, unsigned long *filesize)
 {
