@@ -7,10 +7,11 @@
 
 #define DIE() die_with_usage(argv[0]);
 
-void die_with_usage(const char* progname) {
-    fprintf(stderr, "USAGE: %s <f> [-n <n> -t] where:\n\n", progname);
 
-    fprintf(stderr, "<f> is the desired output-file\n\n");
+void die_with_usage(const char* progname) {
+    fprintf(stderr, "USAGE: %s <f1>...<fn> [-n <n> -t] where:\n\n", progname);
+
+    fprintf(stderr, "<fi> is a desired input-file\n\n");
 
     fprintf(stderr, "-n is for the n-grams descriptor.\n");
     fprintf(stderr, "with an uneven number <n>\n\n");
@@ -21,15 +22,28 @@ void die_with_usage(const char* progname) {
     exit(EXIT_FAILURE);
 }
 
+void print_func(char* file) {
+    printf("Filename: %s\n", file);
+}
+
+void call_function_for_files(char **files, unsigned int numoffiles, void (*f)(char*)) {
+    unsigned int i; 
+    for(i = 0; i < numoffiles; i++) {
+        f(files[i]);
+    }
+}
+
 int main(int argc, char *argv[]){
 
     const char* options = "n:t";
     bool tflag, nflag;
     long input;
     unsigned long n;
-    char* outputfile;
+    char **inputfiles;
+    unsigned int numoffiles;
     tflag = nflag = false;
     char c;
+
     while((c = getopt(argc, argv, options)) != -1) {
         switch(c) {
             case 't': tflag = true; break;
@@ -44,12 +58,12 @@ int main(int argc, char *argv[]){
             case '?': DIE();
         }
     }
-    if(argc - optind != 1) {
-        fprintf(stderr, "Invalid number of positional parameters\n");
+
+    numoffiles = argc-optind;
+    inputfiles = argv+optind;
+    if(numoffiles == 0) {
         DIE();
     }
-    outputfile = argv[optind];
-
     if(tflag){
         printf("Test will be stated here\n");
     }
@@ -60,7 +74,7 @@ int main(int argc, char *argv[]){
         else {
             printf("Angle descriptor will be started here\n");
         }
-        printf("Results will be written as CSV to %s\n", outputfile);
+    call_function_for_files(inputfiles, numoffiles, print_func);
     }
     return EXIT_SUCCESS;
 }
