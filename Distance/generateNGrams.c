@@ -5,103 +5,37 @@
 #include "nGram.h"
 
 
-
-Protein * generateTestProtein(unsigned long cAlphas)
+//generate nGrams from a given protein
+nGram * generateNGrams(Protein * protein, unsigned long n)
 {
-    Protein * protein;
-    Atom * atom;
     size_t i;
+    size_t j;
+    nGram * ngrams;
+    unsigned long number_of_ngrams;
     
-    atom = malloc(cAlphas*sizeof(Atom));
-    protein = malloc(sizeof(Protein));
-    protein->cAlphas = malloc(cAlphas*sizeof(Atom));
-    protein->nr_residues = cAlphas;
-    for(i=0;i<cAlphas;i++)
+    assert(n <= protein->nr_residues);
+    
+    number_of_ngrams = protein->nr_residues - n + 1;
+    ngrams = malloc(number_of_ngrams*sizeof(nGram));
+    for(i=0;i<number_of_ngrams;i++)
     {
-        if(i==cAlphas/2)
+        ngrams[i].nr_cAlphas = n;
+        ngrams[i].cAlphas = malloc(n*sizeof(Atom));
+        for(j=0;j<n;j++)
         {
-            atom[i].name = "centerAtom";
+            ngrams[i].cAlphas[j] = protein->cAlphas[j+i];
         }
-        else
-        {
-            atom[i].name = "Atom";
-        }
-        protein->cAlphas[i] = atom[i];
+        ngrams[i].central_cAlpha = &ngrams[i].cAlphas[n/2];
     }
-    
-    return protein;
+    return ngrams;
 }
 
 
-void deleteTestProtein(Protein * protein)
+//delete nGrams
+void deleteNGrams(nGram * ngrams)
 {
-    size_t i;
+    assert(ngrams != NULL);
     
-    for(i=0;i<protein->nr_residues;i++)
-    {
-        free(&protein->cAlphas[i]);
-    }
-    free(protein->cAlphas);
-    free(protein);
-}
-
-
-nGram * generateNGrams(Protein * protein, unsigned long alphas)
-{
-    size_t i;
-    nGram * ngram;
-    
-    assert(alphas <= protein->nr_residues);
-    
-    ngram = malloc(sizeof(nGram));
-    ngram->nr_cAlphas = alphas;
-    ngram->cAlphas = malloc(alphas*sizeof(Atom));
-    for(i=0;i<alphas;i++)
-    {
-        ngram->cAlphas[i] = protein->cAlphas[i];
-    }
-    ngram->central_cAlpha = &ngram->cAlphas[alphas/2];
-    
-    return ngram;
-}
-
-
-void deleteNGrams(nGram * ngram)
-{
-    free(ngram->cAlphas);
-    free(ngram);
-}
-
-
-void printNGram(nGram * ngram)
-{
-    size_t i;
-    
-    printf("number of c-Alphas: %lu\n",ngram->nr_cAlphas);
-    printf("Atoms: ");
-    for(i=0;i<ngram->nr_cAlphas;i++)
-    {
-        printf("%s ",ngram->cAlphas[i].name);
-    }
-    printf("\n");
-}
-
-
-int main(int argc, char *argv[])
-{
-    Protein * protein;
-    nGram * ngram;
-    unsigned long calphas;
-    
-    if(sscanf(argv[1],"%lu",&calphas) != 1)
-    {
-        fprintf(stderr,"sscanf failed\n");
-        return EXIT_FAILURE;
-    }
-    printf("input: %lu\n",calphas);
-    protein = generateTestProtein(10);
-    ngram = generateNGrams(protein, calphas);
-    printNGram(ngram);
-    
-    return EXIT_SUCCESS;
+    free(ngrams->cAlphas);
+    free(ngrams);
 }
