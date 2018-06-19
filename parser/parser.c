@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-void getInformation(char ** lines, int noflines, char* name,                    
+/*void getInformation(char ** lines, int noflines, char* name,                    
                     float* coordiante1, float* coordinate2, float* coordiante3) 
 {                                                                               
     int tokenLength = 0,                                                        
@@ -34,7 +34,7 @@ void getInformation(char ** lines, int noflines, char* name,
         k = 0;                                                                  
     }                                                                           
                                                                                 
-}  
+}*/  
 
 unsigned char * readFromFile(const char *filename, unsigned long *filesize)
 {
@@ -45,12 +45,22 @@ unsigned char * readFromFile(const char *filename, unsigned long *filesize)
     if(fp == NULL)
     {
         fprintf(stderr, "%s: cannot open file \"%s\"\n", __func__, filename);
+        return NULL;
     }
-    fseek(fp, 0, SEEK_END);
+    if(fseek(fp, 0, SEEK_END) != 0)
+    {
+        fprintf(stderr, "%s: fseek failed\n", __func__);
+    }
     fs = ftell(fp);
     rewind(fp);
     filecontent = malloc(sizeof(*filecontent) * fs);
+    if(fread(filecontent, sizeof(*filecontent), fs, fp) != fs)
+    {
+        fprintf(stderr, "%s: fread failed\n", __func__);
+        return NULL;
+    }
     *filesize = fs;
+    fclose(fp);
 
     return filecontent;
 }
@@ -58,23 +68,40 @@ unsigned char * readFromFile(const char *filename, unsigned long *filesize)
 unsigned char ** getRelevantLines(unsigned char *filecontent, 
                                   unsigned long *nLines)
 {
-    unsigned long idx;
+    unsigned long idx, n;
     unsigned char **lines, *ptr;
-    
+
     ptr = filecontent;
-    lines = malloc(sizeof(lines));
-    idx = 0;
-    while(*ptr != '\0' && strstr(ptr, "\nATOM") != NULL)
+    n = 0;
+
+    /*count the number of relevant lines*/
+    while((*ptr != '\0') && (strstr(ptr, "\nATOM") != NULL))
     {
-        lines[idx] = strstr(ptr, "\nATOM") + 1;
+        ptr = strstr(ptr, "\nATOM") + 1;
+        ++n;
+    }
+    ptr = filecontent;
+    lines = malloc(n * sizeof(*lines));
+    idx = 0;
+   
+    /*save the relevant lines*/ 
+    while((*ptr != '\0') && (strstr(ptr, "\nATOM") != NULL))
+    {
+        lines[idx] = strstr(ptr, "\nATOM");
+        ++lines[idx];
         ptr = lines[idx];
-        idx++;
+        ++idx;
+    }
+
+    /*terminate the individual lines with '\0'*/
+    for(idx = 0; idx < n; ++idx)
+    {
+        ptr = lines[idx];
         ptr = strstr(ptr, "\n");
         *ptr = '\0';
-        ptr++;
     }
-    *nLines = idx;
-    
+
+    *nLines = n; 
     return lines;
 }
 
