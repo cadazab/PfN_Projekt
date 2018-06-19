@@ -3,7 +3,7 @@
 
 typedef struct {
     char *name;
-    double *coordinates;
+    double x, y, z;
 }  Atom;
 
 typedef struct {
