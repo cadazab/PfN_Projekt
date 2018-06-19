@@ -2,6 +2,49 @@
 #include <stdlib.h>
 #include <string.h>
 
+#include "protein.h"
+
+Atom * newAtom()
+{
+    Atom *atom = malloc(sizeof(Atom));
+    atom->name = NULL;
+    atom->coordinates = calloc(3, sizeof(double));
+}
+
+Residue * newResidue(unsigned long nr_atoms)
+{
+    Residue *residue = malloc(sizeof(Residue));
+    residue->atoms = malloc(nr_atoms * sizeof(Atom));
+    residue->nr_atoms = nr_atoms;
+    residue->name = NULL;
+}
+
+Protein * newProtein(unsigned long nr_residues, unsigned long nr_atoms)
+{
+    Protein *protein = malloc(sizeof(Protein));
+    protein->residues = malloc(nr_residues * sizeof(Residue));
+    protein->atoms = malloc(nr_atoms * sizeof(Atom));
+    protein->cAlphas = malloc(nr_residues * sizeof(Atom));
+    protein->nr_residues = nr_residues;
+    protein->nr_atoms = nr_atoms;
+    protein->name = NULL;
+}
+
+char *getProteinName(unsigned char *filecontent, unsigned long filesize)
+{
+    char *name;    
+    unsigned char *ptr;
+   
+    ptr = filecontent;
+    ptr = strstr(ptr, "COMPND   2");
+    ptr = strstr(ptr, ":");
+    name = ptr + 2;
+    ptr = strstr(name, ";");
+    *ptr = '\0';
+
+    return name; 
+}
+
 /*void getInformation(char ** lines, int noflines, char* name,                    
                     float* coordiante1, float* coordinate2, float* coordiante3) 
 {                                                                               
@@ -74,7 +117,7 @@ unsigned char ** getRelevantLines(unsigned char *filecontent,
     ptr = filecontent;
     n = 0;
 
-    /*count the number of relevant lines*/
+    /*count the number of relevant lines (starting with "ATOM")*/
     while((*ptr != '\0') && (strstr(ptr, "\nATOM") != NULL))
     {
         ptr = strstr(ptr, "\nATOM") + 1;
@@ -112,7 +155,8 @@ void parse(char *filename)
     
     filecontent = readFromFile(filename, &filesize);
     lines = getRelevantLines(filecontent, &nLines);
-    
+
+    //get name of the protein 
     //get relevant information
     //Write information into structs
     //funtion to free memory of structs
