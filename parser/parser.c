@@ -6,25 +6,25 @@
 
 Atom * newAtom()
 {
-    Atom *atom = malloc(sizeof(Atom));
+    Atom *atom = malloc(sizeof(*atom));
     atom->name = NULL;
     atom->coordinates = calloc(3, sizeof(double));
 }
 
 Residue * newResidue(unsigned long nr_atoms)
 {
-    Residue *residue = malloc(sizeof(Residue));
-    residue->atoms = malloc(nr_atoms * sizeof(Atom));
+    Residue *residue = malloc(sizeof(*residue));
+    residue->atoms = malloc(nr_atoms * sizeof(residue->atoms));
     residue->nr_atoms = nr_atoms;
     residue->name = NULL;
 }
 
 Protein * newProtein(unsigned long nr_residues, unsigned long nr_atoms)
 {
-    Protein *protein = malloc(sizeof(Protein));
-    protein->residues = malloc(nr_residues * sizeof(Residue));
-    protein->atoms = malloc(nr_atoms * sizeof(Atom));
-    protein->cAlphas = malloc(nr_residues * sizeof(Atom));
+    Protein *protein = malloc(sizeof(*protein));
+    protein->residues = malloc(nr_residues * sizeof(protein->residues));
+    protein->atoms = malloc(nr_atoms * sizeof(protein->atoms));
+    protein->cAlphas = malloc(nr_residues * sizeof(protein->atoms));
     protein->nr_residues = nr_residues;
     protein->nr_atoms = nr_atoms;
     protein->name = NULL;
