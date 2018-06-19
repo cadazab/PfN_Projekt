@@ -14,7 +14,7 @@ void die_with_usage(const char* progname) {
     fprintf(stderr, "<fi> is a desired input-file\n\n");
 
     fprintf(stderr, "-n is for the n-grams descriptor.\n");
-    fprintf(stderr, "with an uneven number <n>\n\n");
+    fprintf(stderr, "with an postive uneven number <n>\n\n");
 
     fprintf(stderr, "if -t is set, the programm will run predefined testcases"
     " and ignore all other parameters\n");
@@ -37,31 +37,34 @@ int main(int argc, char *argv[]){
 
     const char* options = "n:t";
     bool tflag, nflag;
-    long input;
-    unsigned long n;
-    char **inputfiles;
-    unsigned int numoffiles;
+    long ninput, numoffiles;
+    unsigned int n;
+    char **inputfiles, c;
     tflag = nflag = false;
-    char c;
 
     while((c = getopt(argc, argv, options)) != -1) {
         switch(c) {
-            case 't': tflag = true; break;
+            case 't': 
+                tflag = true; 
+                break;
             case 'n': 
                 nflag = true;
-                if(sscanf(optarg, "%ld", &input) != 1 || 
-                input % 2 == 0 || input < 0) {
+                if(sscanf(optarg, "%ld", &ninput) != 1 || 
+                ninput % 2 == 0 || ninput < 0) {
                     DIE();
                 }
-                n = (unsigned long) input;
+                n = (unsigned int) ninput;
                 break;
-            case '?': DIE();
+            case '?':
+                DIE();
         }
     }
 
     numoffiles = argc-optind;
+    // maybe not secure
     inputfiles = argv+optind;
-    if(numoffiles == 0) {
+
+    if(!tflag && numoffiles == 0) {
         DIE();
     }
     if(tflag){
@@ -69,7 +72,7 @@ int main(int argc, char *argv[]){
     }
     else {
         if(nflag) {
-            printf("N-Grams descriptor with %lu will be started here\n", n);
+            printf("N-Grams descriptor with %u will be started here\n", n);
         }
         else {
             printf("Angle descriptor will be started here\n");
