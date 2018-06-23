@@ -60,100 +60,122 @@ char * readFromFile(const char *filename, unsigned long *filesize)
 
     return filecontent;
 }
-
+// TODO remove this debug function
 void print_func(char* file) {
     printf("Filename: %s\n", file);
 }
 
-void call_function_for_files(char **files, unsigned int numoffiles, void (*f)(char*)) {
+void call_function_for_files(char **files, unsigned int numoffiles,
+                                void (*f)(char*)) {
+    assert(files != NULL);
     unsigned int i; 
     for(i = 0; i < numoffiles; i++) {
         f(files[i]);
     }
 }
+// adding to an char* array with exponential 
+// growth in size and adjust the variables.
+char **add_to_array_exp(char **array, unsigned long *currentsize, 
+                        unsigned long *maxsize, char* elem) {
+    assert(array != NULL);
+    assert(currentsize != NULL);
+    assert(maxsize != NULL);
+    assert((*currentsize) <= (*maxsize));
+    if(*currentsize == *maxsize) {
+        *maxsize *= 2;
+        array = realloc(array, *maxsize * sizeof *array);
+    }
+    array[(*currentsize)] = elem;
+    (*currentsize)++;
 
-int main(int argc, char *argv[]){
+    return array;
+}
+char **parse_files(char **inputfiles, unsigned long *filestarts, 
+                    unsigned long *numoffiles) {
+    unsigned long currentsize, maxnum = 1,
+                      j, currindex = 0, i;
+        char **content = malloc(maxnum * sizeof *content), *current;
+        assert(content != NULL);
+        assert(filestarts != NULL);
+        
+        // iterate over all parameter files
+        for(i = 0; i < *numoffiles; i++) {
+            current = readFromFile(inputfiles[i], &currentsize);
+            // at content[currindex] is the pointer malloced for the ith file
+            filestarts[i] = currindex;
+            content = add_to_array_exp(content, &currindex, &maxnum, current);
 
-    const char* options = "n:tf";
-    bool tflag, nflag, fflag;
+            for(j = 0; j < currentsize; j++) {
+                if(current[j] == '\n') {
+                    current[j] = '\0';
+                    content = add_to_array_exp(content, &currindex, 
+                                                &maxnum, current+j+1);
+                }
+            }
+        }
+        inputfiles = content;
+        *numoffiles = currindex;
+
+    return content;
+}
+// this function parses the options from argc to flags
+void parse_options(int argc, char **argv, bool *flags, unsigned int *n) {
+    const char* options = "tn:f";
+    char c;
     long ninput;
-    unsigned int n, i;
-    char **inputfiles, c;
-    // we memorize the pointer to the memory containing a single files
-    // content to free it later correctly
-    unsigned long numoffiles, *startoffile;
-    tflag = nflag = fflag = false;
-
     while((c = getopt(argc, argv, options)) != -1) {
         switch(c) {
-            case 't': 
-                tflag = true; 
+            case 't':
+                flags[0] = true;
                 break;
-            case 'n': 
-                nflag = true;
+            case 'n':
+                flags[1] = true;
                 if(sscanf(optarg, "%ld", &ninput) != 1 || 
                 ninput % 2 == 0 || ninput < 0) {
                     DIE();
                 }
-                n = (unsigned int) ninput;
+                *n = (unsigned int) ninput;
                 break;
             case 'f':
-                fflag = true;
+                flags[2] = true;
                 break;
             case '?':
                 DIE();
         }
     }
+}
+int main(int argc, char *argv[]){
+
+    bool tflag, nflag, fflag;
+    // this for convenience in optionflag functions
+    // order is the same as in string options in the function
+    bool flags[] = {false, false, false};
+
+    unsigned int n, i;
+    char **inputfiles;
+    // we memorize the pointer to the memory containing a 
+    // single files content to free it later correctly
+    unsigned long numoffiles, *filestarts;
+
+    parse_options(argc, argv, flags, &n);
+
+    tflag = flags[0];
+    nflag = flags[1];
+    fflag = flags[2];
+
     numoffiles = (unsigned long) argc-optind;
     // maybe not secure
     inputfiles =  argv+optind;
+
     if(fflag) {
-        // TODO think about how to improve code quality of this block
-        unsigned long currentsize, maxnum = 1,
-                      j, currindex = 0;
-        char **content = malloc(maxnum * sizeof *content), *current;
-        startoffile = malloc(numoffiles * sizeof *startoffile);
-        assert(content != NULL);
-        assert(startoffile != NULL);
-        
-        // iterate over all parameter files
-        for(i = 0; i < numoffiles; i++) {
-            current = readFromFile(inputfiles[i], &currentsize);
-            // TODO think about how to avoid code duplication
-            if(currindex == maxnum) {
-                    maxnum *= 2;
-                    content = realloc(content, maxnum * sizeof *content);
-                    assert(content != NULL);
-            }
-            // this is the pointer to the memory malloced in read function
-            content[currindex] = current;
-            startoffile[i] = currindex;
-            currindex++;
-
-
-            for(j = 0; j < currentsize; j++) {
-                printf("maxnum: %lu\n", maxnum);
-                if(current[j] == '\n') {
-                    if(currindex == maxnum) {
-                        maxnum *= 2;
-                        content = realloc(content, maxnum * sizeof *content);
-                        assert(content != NULL);
-                    }
-                    printf("Index: %lu\n", currindex);
-                    content[currindex] = current+j+1;
-                    current[j] = '\0';
-                    currindex++;
-                }
-            }
-            printf("%s\n", current);
-        }
-        inputfiles = content;
-        numoffiles = currindex;
+        filestarts = malloc(numoffiles * sizeof *filestarts);
+        inputfiles = parse_files(inputfiles, filestarts, &numoffiles);
     }
-
+    // no inputgiles and not testing
     if(!tflag && numoffiles == 0) {
         DIE();
     }
+
     if(tflag){
         printf("Test will be stated here\n");
     }
@@ -170,10 +192,10 @@ int main(int argc, char *argv[]){
     // we need to free the memory used for the input files in this case
     if(fflag) {
         for(i = 0; i < argc-optind; i++) {
-            free(inputfiles[startoffile[i]]);
+            free(inputfiles[filestarts[i]]);
         }
         free(inputfiles);
-        free(startoffile);
+        free(filestarts);
     }
     return EXIT_SUCCESS;
 }
