@@ -88,7 +88,6 @@ void call_function_for_files(char **files, unsigned int numoffiles,
         else f(files[i], NULL);
     }
 }
-
 /*
 adding to an char* array with exponential 
 growth in size and adjust the variables
