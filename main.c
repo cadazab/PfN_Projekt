@@ -9,7 +9,11 @@
 
 #define DIE() die_with_usage(argv[0]);
 
+typedef void Fileprocessorfunc (const char* filename, void* data);
 
+/*
+print a usage and exit the programm
+*/
 void die_with_usage(const char* progname) {
     fprintf(stderr, "USAGE: %s <f1>...<fn> [-n <n> -f -t] where:\n\n", progname);
 
@@ -19,18 +23,20 @@ void die_with_usage(const char* progname) {
     fprintf(stderr, "with an postive uneven number <n>\n\n");
 
     fprintf(stderr, "if -f is used, the input files will be interpreted\n"
-                    "as files containing a list of filenames which\n"
-                    "shall be analyzed\n\n");
+                    "as files containing a filename of a file which\n"
+                    "shall be analyzed in each line\n\n");
 
-    fprintf(stderr, "if -t is set, the programm will run predefined testcases\n"
-    "and ignore all other parameters and the positional arguments\n"
+    fprintf(stderr, "if -t is set, the programm will run predefined testcases, \n"
+    "ignore all other parameters and the positional arguments\n"
     "<fi> are not required\n");
 
     exit(EXIT_FAILURE);
 }
 
-// TODO use function in parser.h/c as soon as it compiles and fixes its 
-// termination problem in current implementation
+/*
+TODO use function in parser.h/c as soon as it compiles and fixes its 
+ termination problem in current implementation
+ */
 char * readFromFile(const char *filename, unsigned long *filesize)
 {
     FILE *fp = fopen(filename, "r");
@@ -60,21 +66,33 @@ char * readFromFile(const char *filename, unsigned long *filesize)
 
     return filecontent;
 }
-// TODO remove this debug function
-void print_func(char* file) {
+
+/* 
+TODO remove this debug function
+*/
+void print_func(const char* file , void *data) {
+    (void) data;
     printf("Filename: %s\n", file);
 }
 
+/*
+call f for each file in files
+*/
 void call_function_for_files(char **files, unsigned int numoffiles,
-                                void (*f)(char*)) {
+                                Fileprocessorfunc f, void **data) {
     assert(files != NULL);
     unsigned int i; 
     for(i = 0; i < numoffiles; i++) {
-        f(files[i]);
+
+        if(data != NULL) f(files[i], data[i]);
+        else f(files[i], NULL);
     }
 }
-// adding to an char* array with exponential 
-// growth in size and adjust the variables.
+
+/*
+adding to an char* array with exponential 
+growth in size and adjust the variables
+*/
 char **add_to_array_exp(char **array, unsigned long *currentsize, 
                         unsigned long *maxsize, char* elem) {
     assert(array != NULL);
@@ -90,6 +108,11 @@ char **add_to_array_exp(char **array, unsigned long *currentsize,
 
     return array;
 }
+
+/* 
+interpret the strings in inputfiles as files contaning filename
+and return an array of this name
+*/
 char **parse_files(char **inputfiles, unsigned long *filestarts, 
                     unsigned long *numoffiles) {
     unsigned long currentsize, maxnum = 1,
@@ -118,7 +141,10 @@ char **parse_files(char **inputfiles, unsigned long *filestarts,
 
     return content;
 }
-// this function parses the options from argc to flags
+
+/*
+this function parses the options from argc to flags
+*/
 void parse_options(int argc, char **argv, bool *flags, unsigned int *n) {
     const char* options = "tn:f";
     char c;
@@ -143,6 +169,29 @@ void parse_options(int argc, char **argv, bool *flags, unsigned int *n) {
                 DIE();
         }
     }
+}
+
+/*
+Generates the filename for the output file by adding a file extension
+*/
+const char *generate_outfile_name(const char *filename) {
+    const char *ending = "_result.csv";
+    unsigned long length = strlen(filename)+strlen(ending)+1;
+    char *outputfile = malloc((length)*sizeof(char));
+    assert(outputfile != NULL);
+    snprintf(outputfile, length, "%s%s", filename, ending);
+    return outputfile;
+}
+
+/*
+TODO write actual data to a file
+*/
+void write_output_file(const char *filename, void *data) {
+    (void) data;
+    const char *outputfile = generate_outfile_name(filename);
+
+    printf("Write output for %s to %s\n", filename, outputfile);
+    free((void*)outputfile);
 }
 int main(int argc, char *argv[]){
 
@@ -171,7 +220,7 @@ int main(int argc, char *argv[]){
         filestarts = malloc(numoffiles * sizeof *filestarts);
         inputfiles = parse_files(inputfiles, filestarts, &numoffiles);
     }
-    // no inputgiles and not testing
+    // no inputfiles and not testing
     if(!tflag && numoffiles == 0) {
         DIE();
     }
@@ -180,15 +229,17 @@ int main(int argc, char *argv[]){
         printf("Test will be stated here\n");
     }
     else {
+        // TODO call real descriptor functions
         if(nflag) {
             printf("N-Grams descriptor with %u will be started here\n", n);
         }
         else {
             printf("Angle descriptor will be started here\n");
         }
-    call_function_for_files(inputfiles, numoffiles, print_func);
+    call_function_for_files(inputfiles, numoffiles, print_func, NULL);
     }
 
+    call_function_for_files(inputfiles, numoffiles, write_output_file, NULL);
     // we need to free the memory used for the input files in this case
     if(fflag) {
         for(i = 0; i < argc-optind; i++) {
