@@ -1,4 +1,4 @@
-.PHONY: all clean cleanup
+.PHONY: all clean cleanup test
 
 CFLAGS+=-g -Wall -Werror -Wunused-parameter -Wunused-variable
 
@@ -12,3 +12,5 @@ clean:
 
 cleanup: clean
 	${RM} *.x
+test: 
+	valgrind --leak-check=full --track-origins=yes  ./main.x test.out test.out -f
