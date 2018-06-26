@@ -232,6 +232,35 @@ unsigned char ** getRelevantLines(unsigned char *filecontent,
     return lines;
 }
 
+unsigned long getNumberOfResidues(unsigned char ** residues, 
+                                  unsigned long nLines)
+{
+    unsigned long idx, nResidues;
+    unsigned char *temp;
+   
+    temp = residues[0];
+    nResidues = 1;
+    for(idx = 1; idx < nLines; ++idx)
+    {
+        if(strcmp(residues[idx], temp))
+        {
+            ++nResidues;
+            temp = residues[idx];
+            printf("%s\n", temp);
+        }
+    }
+
+    return nResidues;
+}
+
+void writeInfoIntoStructs(char **name, char **residues, unsigned long nLines,
+                                                        double* coordinate1,
+                                                        double* coordinate2,
+                                                        double* coordinate3)
+{
+    
+}
+
 void parse(char *filename)
 {
     unsigned long nLines, filesize, idx;
@@ -250,6 +279,8 @@ void parse(char *filename)
     getInformation((const unsigned char **)lines, nLines, name, residues, 
                    coordinate1, coordinate2, coordinate3);    
 
+    unsigned long nResidues = getNumberOfResidues(residues, nLines);
+    printf("%lu\n", nResidues);
     //Write information into structs
     //funtion to free memory of structs
     free(coordinate1);
