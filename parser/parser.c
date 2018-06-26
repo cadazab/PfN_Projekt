@@ -12,6 +12,7 @@ Atom * newAtom()
     atom->x = 0;
     atom->y = 0;
     atom->z = 0;
+    return atom;
 }
 
 Residue * newResidue(unsigned long nr_atoms)
@@ -20,6 +21,7 @@ Residue * newResidue(unsigned long nr_atoms)
     residue->atoms = malloc(nr_atoms * sizeof(residue->atoms));
     residue->nr_atoms = nr_atoms;
     residue->name = NULL;
+    return residue;
 }
 
 Protein * newProtein(unsigned long nr_residues, unsigned long nr_atoms)
@@ -31,6 +33,7 @@ Protein * newProtein(unsigned long nr_residues, unsigned long nr_atoms)
     protein->nr_residues = nr_residues;
     protein->nr_atoms = nr_atoms;
     protein->name = NULL;
+    return protein;
 }
 
 char *getProteinName(unsigned char *filecontent, unsigned long filesize)
@@ -48,7 +51,7 @@ char *getProteinName(unsigned char *filecontent, unsigned long filesize)
     return name; 
 }
 
-void getInformation(unsigned char ** lines, int noflines, unsigned char** name, unsigned char** residues,  
+void getInformation(const unsigned char ** lines, int noflines, unsigned char** name, unsigned char** residues,  
                     double* coordinate1, double* coordinate2, double* coordinate3) 
 {                                                                               
     int idx = 0,                                                                
@@ -244,22 +247,23 @@ void parse(char *filename)
     coordinate2 = malloc(nLines * sizeof(double));
     coordinate3 = malloc(nLines * sizeof(double));
 
-    getInformation(lines, nLines, name, residues, coordinate1, coordinate2,
-                   coordinate3);    
+    getInformation((const unsigned char **)lines, nLines, name, residues, 
+                   coordinate1, coordinate2, coordinate3);    
 
-
-    //get name of the protein 
-    //get relevant information
     //Write information into structs
     //funtion to free memory of structs
-    /*
-    free(filecontent);
+    free(coordinate1);
+    free(coordinate2);
+    free(coordinate3);
     for(idx = 0; idx < nLines; idx++)
     {
-        free(lines[idx]);
+        free(name[idx]);
+        free(residues[idx]);
     }
+    free(name);
+    free(residues);
+    free(filecontent);
     free(lines);
-    */
 }
 
 int main(int argc, char * argv[])
