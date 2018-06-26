@@ -1,0 +1,66 @@
+HEADER    OXYGEN TRANSPORT                        18-FEB-93   1CBL              
+TITLE     THE 1.9 ANGSTROM STRUCTURE OF DEOXY-BETA4 HEMOGLOBIN: ANALYSIS OF THE 
+TITLE    2 PARTITIONING OF QUATERNARY-ASSOCIATED AND LIGAND-INDUCED CHANGES IN  
+TITLE    3 TERTIARY STRUCTURE                                                   
+COMPND    MOL_ID: 1;                                                            
+COMPND   2 MOLECULE: HEMOGLOBIN BETA 4 (DEOXY);                                 
+COMPND   3 CHAIN: A, B, C, D;                                                   
+COMPND   4 ENGINEERED: YES                                                      
+SOURCE    MOL_ID: 1;                                                            
+SOURCE   2 ORGANISM_SCIENTIFIC: HOMO SAPIENS;                                   
+SOURCE   3 ORGANISM_COMMON: HUMAN;                                              
+SOURCE   4 ORGANISM_TAXID: 9606                                                 
+KEYWDS    OXYGEN TRANSPORT                                                      
+EXPDTA    X-RAY DIFFRACTION                                                     
+AUTHOR    G.E.O.BORGSTAHL,A.ARNONE                                              
+REVDAT   4   13-JUL-11 1CBL    1       VERSN                                    
+REVDAT   3   24-FEB-09 1CBL    1       VERSN                                    
+REVDAT   2   01-APR-03 1CBL    1       JRNL                                     
+REVDAT   1   31-JUL-94 1CBL    0                                                
+JRNL        AUTH   G.E.BORGSTAHL,P.H.ROGERS,A.ARNONE                            
+JRNL        TITL   THE 1.9 A STRUCTURE OF DEOXY BETA 4 HEMOGLOBIN. ANALYSIS OF  
+JRNL        TITL 2 THE PARTITIONING OF QUATERNARY-ASSOCIATED AND LIGAND-INDUCED 
+JRNL        TITL 3 CHANGES IN TERTIARY STRUCTURE.                               
+JRNL        REF    J.MOL.BIOL.                   V. 236   831 1994              
+JRNL        REFN                   ISSN 0022-2836                               
+JRNL        PMID   8114097                                                      
+JRNL        DOI    10.1006/JMBI.1994.1192    
+CRYST1   63.000   81.800   54.400  90.00  89.70  90.00 P 1 21 1      8          
+ORIGX1      1.000000  0.000000  0.000000        0.00000                         
+ORIGX2      0.000000  1.000000  0.000000        0.00000                         
+ORIGX3      0.000000  0.000000  1.000000        0.00000                         
+SCALE1     -0.003327  0.012789 -0.008883        0.77281                         
+SCALE2      0.003701  0.007299  0.009120        0.11693                         
+SCALE3      0.017125 -0.000111 -0.006861        0.22130                         
+ATOM      1  N   VAL A   1      18.584   7.359  -2.003  1.00 72.38           N  
+ATOM      2  CA  VAL A   1      17.884   8.346  -2.833  1.00 67.43           C  
+ATOM      3  C   VAL A   1      18.850   8.895  -3.876  1.00 65.35           C  
+ATOM      4  O   VAL A   1      19.925   9.396  -3.518  1.00 67.91           O  
+ATOM      5  CB  VAL A   1      17.263   9.474  -1.974  1.00 53.95           C  
+ATOM      6  CG1 VAL A   1      16.529  10.549  -2.775  1.00 49.16           C  
+ATOM      7  CG2 VAL A   1      16.340   8.928  -0.906  1.00 46.59           C  
+ATOM      8  N   HIS A   2      18.438   8.801  -5.126  1.00 61.29           N  
+ATOM      9  CA  HIS A   2      19.245   9.397  -6.196  1.00 62.61           C  
+ATOM     10  C   HIS A   2      18.572  10.714  -6.603  1.00 56.60           C  
+ATOM     11  O   HIS A   2      17.518  10.764  -7.258  1.00 58.16           O  
+ATOM     12  CB  HIS A   2      19.552   8.532  -7.429  1.00 78.99           C  
+ATOM     13  CG  HIS A   2      20.556   9.218  -8.311  1.00 90.11           C  
+ATOM     14  ND1 HIS A   2      20.277   9.724  -9.551  1.00 89.29           N  
+ATOM     15  CD2 HIS A   2      21.852   9.512  -8.046  1.00 98.08           C  
+ATOM     16  CE1 HIS A   2      21.366  10.287 -10.033  1.00 98.44           C  
+ATOM     17  NE2 HIS A   2      22.333  10.168  -9.144  1.00108.60           N  
+CONECT 4815 4784 4814 4825                                                      
+CONECT 4816 4813                                                                
+CONECT 4817 4814 4818                                                           
+CONECT 4818 4817 4819                                                           
+CONECT 4819 4818 4820 4821                                                      
+CONECT 4820 4819                                                                
+CONECT 4821 4819                                                                
+CONECT 4822 4788 4791 4826                                                      
+CONECT 4823 4798 4801 4826                                                      
+CONECT 4824 4805 4808 4826                                                      
+CONECT 4825 4812 4815 4826                                                      
+CONECT 4826 4199 4822 4823 4824                                                 
+CONECT 4826 4825                                                                
+MASTER      379    0    8   32    0    0   17    6 4755    4  200   48          
+END                                                                             
