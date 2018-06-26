@@ -9,7 +9,7 @@
 
 #define DIE() die_with_usage(argv[0]);
 
-typedef void Fileprocessorfunc (const char* filename, void* data);
+typedef void Fileprocessorfunc (const char *filename, void *data);
 
 /*
 print a usage and exit the programm
@@ -35,7 +35,7 @@ void die_with_usage(const char* progname) {
 
 /*
 TODO use function in parser.h/c as soon as it compiles and fixes its 
- termination problem in current implementation
+termination problem in current implementation
  */
 char * readFromFile(const char *filename, unsigned long *filesize)
 {
@@ -98,6 +98,7 @@ char **add_to_array_exp(char **array, unsigned long *currentsize,
     assert(currentsize != NULL);
     assert(maxsize != NULL);
     assert((*currentsize) <= (*maxsize));
+    
     if(*currentsize == *maxsize) {
         *maxsize *= 2;
         array = realloc(array, *maxsize * sizeof *array);
@@ -108,41 +109,42 @@ char **add_to_array_exp(char **array, unsigned long *currentsize,
     return array;
 }
 
-/* 
-interpret the strings in inputfiles as files contaning filename
-and return an array of this name
+/*
+interpret the strings in inputfiles as files contaning filenames
+and return an array of filenames
 */
 char **parse_files(char **inputfiles, unsigned long *filestarts, 
                     unsigned long *numoffiles) {
-    unsigned long currentsize, maxnum = 1,
-                      j, currindex = 0, i;
-        char **content = malloc(maxnum * sizeof *content), *current;
-        assert(content != NULL);
-        assert(filestarts != NULL);
-        
-        // iterate over all parameter files
-        for(i = 0; i < *numoffiles; i++) {
-            current = readFromFile(inputfiles[i], &currentsize);
-            // at content[currindex] is the pointer malloced for the ith file
-            filestarts[i] = currindex;
-            content = add_to_array_exp(content, &currindex, &maxnum, current);
-
-            for(j = 0; j < currentsize; j++) {
-                if(current[j] == '\n') {
-                    current[j] = '\0';
-                    content = add_to_array_exp(content, &currindex, 
-                                                &maxnum, current+j+1);
-                }
+    unsigned long currentsize, maxnum = 10, j, currindex = 0, i;
+    char **content = malloc(maxnum * sizeof *content), *current;
+    assert(content != NULL);
+    assert(filestarts != NULL);
+    
+    // iterate over all parameter files
+    for(i = 0; i < *numoffiles; i++) {
+        current = readFromFile(inputfiles[i], &currentsize);
+        assert(current != NULL);
+        // at content[currindex] is the pointer malloced for the ith file
+        filestarts[i] = currindex;
+        content = add_to_array_exp(content, &currindex, &maxnum, current);
+        for(j = 0; j < currentsize; j++) {
+            if(current[j] == '\n') {
+                current[j] = '\0';
+                content = add_to_array_exp(content, &currindex, 
+                                            &maxnum, current+j+1);
             }
         }
-        inputfiles = content;
-        *numoffiles = currindex;
+    }
+    *numoffiles = currindex;
 
     return content;
 }
 
 /*
 this function parses the options from argc to flags
+
+argv gets permuted by getopt
+
 */
 void parse_options(int argc, char **argv, bool *flags, unsigned int *n) {
     const char* options = "tn:f";
@@ -215,13 +217,14 @@ int main(int argc, char *argv[]){
     // maybe not secure
     inputfiles =  argv+optind;
 
-    if(fflag) {
-        filestarts = malloc(numoffiles * sizeof *filestarts);
-        inputfiles = parse_files(inputfiles, filestarts, &numoffiles);
-    }
     // no inputfiles and not testing
     if(!tflag && numoffiles == 0) {
         DIE();
+    }
+
+    if(fflag) {
+        filestarts = malloc(numoffiles * sizeof *filestarts);
+        inputfiles = parse_files(inputfiles, filestarts, &numoffiles);
     }
 
     if(tflag){
