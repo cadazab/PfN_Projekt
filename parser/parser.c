@@ -48,12 +48,12 @@ char *getProteinName(unsigned char *filecontent, unsigned long filesize)
     return name; 
 }
 
-void getInformation(char ** lines, int noflines, char** name, char** residues,  
-                    float* coordinate1, float* coordinate2, float* coordinate3) 
+void getInformation(unsigned char ** lines, int noflines, unsigned char** name, unsigned char** residues,  
+                    double* coordinate1, double* coordinate2, double* coordinate3) 
 {                                                                               
-    int tokenLength = 0,                                                        
-        idx = 0,                                                                
+    int idx = 0,                                                                
         count = 0;                                                              
+    unsigned long name_length = 0, residues_length = 0;
     bool previous_space = false;                                                
     char * name_chars,                                                          
          * residues_chars,                                                      
@@ -103,10 +103,12 @@ void getInformation(char ** lines, int noflines, char** name, char** residues,
                 {                                                               
                     case 2: name_chars[idx] = lines[i][j];                      
                             name_chars[idx+1] = '\0';
+                            name_length++;
                             idx++;                                              
                             break;                                              
                     case 3: residues_chars[idx] = lines[i][j]; 
                             residues_chars[idx+1] = '\0';
+                            residues_length++;
                             idx++;                                              
                             break;                                              
                     case 6: coordinate1_chars[idx] = lines[i][j];  
@@ -126,12 +128,14 @@ void getInformation(char ** lines, int noflines, char** name, char** residues,
         }         
         /*
         * copying the help arrays as one token into the information arrays
-        */                                                              
+        */                                    
+        name[i] = malloc((name_length+1)*sizeof(char));
+        residues[i] = malloc((residues_length+1)*sizeof(char));                          
         strcpy(name[i],name_chars);
         strcpy(residues[i],residues_chars);
-        sscanf(coordinate1_chars,"%f",&coordinate1[i]);                         
-        sscanf(coordinate2_chars,"%f",&coordinate2[i]);                         
-        sscanf(coordinate3_chars,"%f",&coordinate3[i]);                         
+        sscanf(coordinate1_chars,"%lf",&coordinate1[i]);                         
+        sscanf(coordinate2_chars,"%lf",&coordinate2[i]);                         
+        sscanf(coordinate3_chars,"%lf",&coordinate3[i]);                         
         /*
         * freeing the helping arrays
         */
@@ -141,16 +145,17 @@ void getInformation(char ** lines, int noflines, char** name, char** residues,
         free(coordinate2_chars);                                                
         free(coordinate3_chars);                                                
         count = 0;
-    }     
+        name_length = 0;
+        residues_length = 0;
+    }   
     /*
     * only relevant for testing
-    */                                                                      
-    printf("%s %s %.2f %.2f %.2f\n",name[0],residues[0],coordinate1[0],
-           coordinate2[0],coordinate3[0]);
-    printf("%s %s %.2f %.2f %.2f\n",name[1],residues[1],coordinate1[1],
-           coordinate2[1],coordinate3[1]);
-    printf("%s %s %.2f %.2f %.2f\n",name[2],residues[2],coordinate1[2],
-           coordinate2[2],coordinate3[2]);
+    */
+    for(int i = 0; i < noflines;i++)
+    {
+        printf("%s %s %.2f %.2f %.2f\n",name[i],residues[i],coordinate1[i],
+               coordinate2[i],coordinate3[i]);
+    }  
 
 
 }                                                                                             
@@ -227,46 +232,37 @@ unsigned char ** getRelevantLines(unsigned char *filecontent,
 void parse(char *filename)
 {
     unsigned long nLines, filesize, idx;
-    unsigned char *filecontent, **lines;
-    
+    unsigned char *filecontent, **lines, **name, **residues;
+    double *coordinate1, *coordinate2, *coordinate3;
+
     filecontent = readFromFile(filename, &filesize);
     lines = getRelevantLines(filecontent, &nLines);
+
+    name = malloc(nLines * sizeof(char*));
+    residues = malloc(nLines * sizeof(char*));
+    coordinate1 = malloc(nLines * sizeof(double));    
+    coordinate2 = malloc(nLines * sizeof(double));
+    coordinate3 = malloc(nLines * sizeof(double));
+
+    getInformation(lines, nLines, name, residues, coordinate1, coordinate2,
+                   coordinate3);    
+
 
     //get name of the protein 
     //get relevant information
     //Write information into structs
     //funtion to free memory of structs
-
+    /*
     free(filecontent);
     for(idx = 0; idx < nLines; idx++)
     {
         free(lines[idx]);
     }
     free(lines);
+    */
 }
 
 int main(int argc, char * argv[])
 {
-    int noflines = 3;
-    char **lines;
-    char ** names = malloc(3*sizeof(char*));
-    float coordinate1[3];
-    float coordinate2[3];
-    float coordinate3[3];
-    char ** residues = malloc(3*sizeof(char));
-    lines = malloc(3*sizeof(char*));
-    for(int idx = 0; idx < 3; idx++)
-    {
-        names[idx] = malloc(10*sizeof(char));
-        residues[idx] = malloc(10*sizeof(char));
-    }
-    for(int idx = 0; idx < 3; idx++)
-    {
-        lines[idx] = "ATOM      3  C   VAL A   1      36.011  48.598   3.272  1.00 57.04           C"; 
-    }
-    getInformation(lines,noflines,names,residues,coordinate1,coordinate2,coordinate3);
+    parse("test.txt");
 }
-
-
-
-
