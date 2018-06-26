@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdbool.h>
 
 #include "protein.h"
 
@@ -8,7 +9,9 @@ Atom * newAtom()
 {
     Atom *atom = malloc(sizeof(*atom));
     atom->name = NULL;
-    atom->coordinates = calloc(3, sizeof(double));
+    atom->x = 0;
+    atom->y = 0;
+    atom->z = 0;
 }
 
 Residue * newResidue(unsigned long nr_atoms)
@@ -58,59 +61,98 @@ void getInformation(char ** lines, int noflines, char** name, char** residues,
          * coordinate2_chars,                                                   
          * coordinate3_chars;                                                   
                                                                                 
-                                                                                
+    /*
+    * going through every line   
+    */                                                                        
     for(int i = 0; i < noflines; i++)                                           
-    {                                                                           
+    {
+        /*
+        * allocating the help-array where the relevant chars of one line 
+        * are saved in
+        */                                                                           
         name_chars = malloc(sizeof(char)*10);                                   
         residues_chars = malloc(sizeof(char)*10);                               
         coordinate1_chars = malloc(sizeof(char)*10);                            
         coordinate2_chars = malloc(sizeof(char)*10);                            
-        coordinate3_chars = malloc(sizeof(char)*10);                            
+        coordinate3_chars = malloc(sizeof(char)*10);
+        /*
+        * going through every character of one line
+        */                            
         for(int j = 0;lines[i][j] != '\n';j++)                                  
-        {                                                                       
+        { 
+            /*
+            * dividing one line into several tokens divided by spaces
+            */                                                                      
             if(lines[i][j] == ' ' && false == previous_space)                   
             {                                                                   
                 count++;                                                        
                 previous_space = true;                                          
                 idx = 0;                                                        
-            }                                                                   
+            } 
+            /*
+            * checking every character that isn't space
+            */                                                                  
             else if(lines[i][j] != ' ')                                         
             {                                                                   
                 previous_space = false;                                         
+                /*
+                * checking if a character belongs to a relevant 
+                * information part
+                */
                 switch(count)                                                   
                 {                                                               
                     case 2: name_chars[idx] = lines[i][j];                      
+                            name_chars[idx+1] = '\0';
                             idx++;                                              
                             break;                                              
-                    case 3: residues_chars[idx] = lines[i][j];                  
+                    case 3: residues_chars[idx] = lines[i][j]; 
+                            residues_chars[idx+1] = '\0';
                             idx++;                                              
                             break;                                              
-                    case 6: coordinate1_chars[idx] = lines[i][j];               
+                    case 6: coordinate1_chars[idx] = lines[i][j];  
+                            coordinate1_chars[idx+1] = '\0';
                             idx++;                                              
                             break;                                              
-                    case 7: coordinate2_chars[idx] = lines[i][j];               
+                    case 7: coordinate2_chars[idx] = lines[i][j];  
+                            coordinate2_chars[idx+1] = '\0';
                             idx++;                                              
                             break;                                              
-                    case 8: coordinate3_chars[idx] = lines[i][j];               
+                    case 8: coordinate3_chars[idx] = lines[i][j];       
+                            coordinate3_chars[idx+1] = '\0';
                             idx++;                                              
                             break;                                              
                 }                                                               
             }                                                                   
-        }                                                                       
-        printf("%s\n",name_chars);                                              
-        name[i] = name_chars;                                                   
-        residues[i] = residues_chars;                                           
+        }         
+        /*
+        * copying the help arrays as one token into the information arrays
+        */                                                              
+        strcpy(name[i],name_chars);
+        strcpy(residues[i],residues_chars);
         sscanf(coordinate1_chars,"%f",&coordinate1[i]);                         
         sscanf(coordinate2_chars,"%f",&coordinate2[i]);                         
         sscanf(coordinate3_chars,"%f",&coordinate3[i]);                         
+        /*
+        * freeing the helping arrays
+        */
         free(name_chars);                                                       
         free(residues_chars);                                                   
         free(coordinate1_chars);                                                
         free(coordinate2_chars);                                                
         free(coordinate3_chars);                                                
-    }                                                                           
+        count = 0;
+    }     
+    /*
+    * only relevant for testing
+    */                                                                      
     printf("%s %s %.2f %.2f %.2f\n",name[0],residues[0],coordinate1[0],
            coordinate2[0],coordinate3[0]);
+    printf("%s %s %.2f %.2f %.2f\n",name[1],residues[1],coordinate1[1],
+           coordinate2[1],coordinate3[1]);
+    printf("%s %s %.2f %.2f %.2f\n",name[2],residues[2],coordinate1[2],
+           coordinate2[2],coordinate3[2]);
+
+
 }                                                                                             
 
 unsigned char * readFromFile(const char *filename, unsigned long *filesize)
@@ -202,4 +244,29 @@ void parse(char *filename)
     }
     free(lines);
 }
+
+int main(int argc, char * argv[])
+{
+    int noflines = 3;
+    char **lines;
+    char ** names = malloc(3*sizeof(char*));
+    float coordinate1[3];
+    float coordinate2[3];
+    float coordinate3[3];
+    char ** residues = malloc(3*sizeof(char));
+    lines = malloc(3*sizeof(char*));
+    for(int idx = 0; idx < 3; idx++)
+    {
+        names[idx] = malloc(10*sizeof(char));
+        residues[idx] = malloc(10*sizeof(char));
+    }
+    for(int idx = 0; idx < 3; idx++)
+    {
+        lines[idx] = "ATOM      3  C   VAL A   1      36.011  48.598   3.272  1.00 57.04           C"; 
+    }
+    getInformation(lines,noflines,names,residues,coordinate1,coordinate2,coordinate3);
+}
+
+
+
 
