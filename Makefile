@@ -13,4 +13,4 @@ clean:
 cleanup: clean
 	${RM} *.x
 test: 
-	valgrind --leak-check=full --track-origins=yes  ./main.x test.out test.out -f
+	valgrind --leak-check=full --track-origins=yes  ./main.x test.test test.test -f
