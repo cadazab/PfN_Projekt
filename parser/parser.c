@@ -33,6 +33,7 @@ Protein * newProtein(char *name, unsigned long nr_residues, unsigned long nr_ato
     protein->residues = malloc(nr_residues * sizeof(protein->residues));
     protein->atoms = malloc(nr_atoms * sizeof(protein->atoms));
     protein->cAlphas = malloc(nr_residues * sizeof(protein->atoms));
+    // strcpy is unsafe
     protein->name = malloc(50 * sizeof(char));
     strcpy(protein->name, name);
     protein->nr_residues = nr_residues;
@@ -323,7 +324,7 @@ unsigned long *getResidueLengths(char **residues, char **residue_number,
 }
 */
 
-Protein* parse(char *filename)
+Protein* parse(const char *filename)
 {
     unsigned long nLines, filesize, idx, *nofresidues, *residue_lengths;
     char *filecontent,// *protein_name, 
@@ -389,4 +390,3 @@ void freeProteinStruct(Protein *protein)
     free(protein->residues);
     free(protein);    
 }
-

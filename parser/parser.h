@@ -3,7 +3,7 @@
 
 #include "../protein.h"
 
-Protein *parse(char *filename);
+Protein *parse(const char *filename);
 
 void freeProteinStruct(Protein * protein);
 
