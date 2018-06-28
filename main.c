@@ -10,13 +10,14 @@
 
 #define DIE() die_with_usage(argv[0]);
 
-typedef Protein* Parsfunc (const char *filename);
+typedef Protein* Parsefunc (const char *filename);
 typedef void Fileprocessorfunc (const char *filename, void *data);
+typedef void* Desciptorfunc (Protein* protein);
 
 /*
 print a usage and exit the programm
 */
-void die_with_usage(const char* progname) {
+static void die_with_usage(const char* progname) {
     fprintf(stderr, "USAGE: %s <f1>...<fn> [-n <n> -f -t] where:\n\n", progname);
 
     fprintf(stderr, "<fi> is a desired input-file and at least one file is required\n\n");
@@ -46,7 +47,7 @@ void print_func(const char *file , void *data) {
 /*
 call f for each file in files
 */
-void call_function_for_files(char **files, unsigned int numoffiles,
+static void call_processfunc_for_all(char **files, unsigned int numoffiles,
                                 Fileprocessorfunc f, void **data) {
     assert(files != NULL);
     unsigned int i; 
@@ -55,6 +56,28 @@ void call_function_for_files(char **files, unsigned int numoffiles,
         if(data != NULL) f(files[i], data[i]);
         else f(files[i], NULL);
     }
+}
+
+static Protein **call_parsefunc_for_all(char **files,
+                                            unsigned long numoffiles,
+                                            Parsefunc p) {
+    Protein **results = malloc(numoffiles * sizeof *results);
+    unsigned long i;
+    for(i = 0; i < numoffiles; i++) {
+        results[i] = p(files[i]);
+    }
+    return results;
+}
+
+static void **call_descriptorfunc_for_all(Protein **proteins,
+                                             unsigned long number,
+                                             Desciptorfunc d) {
+    void **results = malloc(number * sizeof *results);
+    unsigned long i;
+    for(i = 0; i < number; i++) {
+        results[i] = d(proteins[i]);
+    }
+    return results;
 }
 /*
 adding to an char* array with exponential 
@@ -162,6 +185,18 @@ void write_output_file(const char *filename, void *data) {
     printf("Write output for %s to %s\n", filename, outputfile);
     free((void*)outputfile);
 }
+
+void *dummy_descriptor(Protein *protein) {
+    if(protein == NULL) {
+        printf("Processing: NULL\n");
+    }
+    else {
+        printf("Processing: %s\n", protein->name);
+    }
+    return NULL;
+}
+
+
 int main(int argc, char *argv[]){
 
     bool tflag, nflag, fflag;
@@ -171,9 +206,16 @@ int main(int argc, char *argv[]){
 
     unsigned int n, i;
     char **inputfiles;
-    // we memorize the pointer to the memory containing a 
+    // we save the pointer to the memory containing a
     // single files content to free it later correctly
     unsigned long numoffiles, *filestarts;
+    Protein **proteins;
+
+    // Declare function pointer
+    Parsefunc *parser = &parse;
+    Desciptorfunc *desc = &dummy_descriptor;
+    void **descresult;
+
 
     parse_options(argc, argv, flags, &n);
 
@@ -197,8 +239,12 @@ int main(int argc, char *argv[]){
 
     if(tflag){
         printf("Test will be stated here\n");
+        return EXIT_SUCCESS;
     }
     else {
+
+        proteins = call_parsefunc_for_all(inputfiles, numoffiles, parser);
+
         // TODO call real descriptor functions
         if(nflag) {
             printf("N-Grams descriptor with %u will be started here\n", n);
@@ -206,17 +252,23 @@ int main(int argc, char *argv[]){
         else {
             printf("Angle descriptor will be started here\n");
         }
-    call_function_for_files(inputfiles, numoffiles, print_func, NULL);
+        descresult = call_descriptorfunc_for_all(proteins, numoffiles, desc);
+        call_processfunc_for_all(inputfiles, numoffiles, print_func,
+                                    descresult);
+
+        call_processfunc_for_all(inputfiles, numoffiles, write_output_file, NULL);
+
+        // we need to free the memory used for the input files in this case
+        if(fflag) {
+            for(i = 0; i < argc-optind; i++) {
+                free(inputfiles[filestarts[i]]);
+            }
+            free(inputfiles);
+            free(filestarts);
+        }
+        free(proteins);
+        free(descresult);
     }
 
-    call_function_for_files(inputfiles, numoffiles, write_output_file, NULL);
-    // we need to free the memory used for the input files in this case
-    if(fflag) {
-        for(i = 0; i < argc-optind; i++) {
-            free(inputfiles[filestarts[i]]);
-        }
-        free(inputfiles);
-        free(filestarts);
-    }
     return EXIT_SUCCESS;
 }
