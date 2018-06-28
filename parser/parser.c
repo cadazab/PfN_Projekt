@@ -86,8 +86,9 @@ void getInformation(const char ** lines, const int noflines, char** name,
         * are saved in
         */                                                                           
         name_chars = malloc(sizeof(char)*10);                                   
-        residues_chars = malloc(sizeof(char)*10);                               
-        residue_number_chars = malloc(sizeof(char));
+        residues_chars = malloc(sizeof(char)*10);
+        // this 2* fixes memory leaks caused by this line
+        residue_number_chars = malloc(2*sizeof(char));
         coordinate1_chars = malloc(sizeof(char)*10);                            
         coordinate2_chars = malloc(sizeof(char)*10);                            
         coordinate3_chars = malloc(sizeof(char)*10);
