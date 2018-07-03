@@ -114,26 +114,11 @@ void getInformation(const char ** lines, const int noflines, char** name,
                 */
                 switch(count)                                                   
                 {                                               
-                            /*
-                            * in case there is an residue name with 4 
-                            * characters and an atom name with 3 characters, 
-                            * there is the special case that atom name and
-                            * residue name are connected
-                            */
-                    case 2: if(idx == 3)
-                            {
-                                count++;
-                                residues_chars[0] = lines[i][j];
-                                residues_chars[1] = '\0';
-                                idx = 1;
-                            }
-                            else
-                            {
-                                name_chars[idx] = lines[i][j];                      
-                                name_chars[idx+1] = '\0';
-                                name_length++;
-                                idx++;
-                            }                                              
+                    case 2: 
+                            name_chars[idx] = lines[i][j];                      
+                            name_chars[idx+1] = '\0';
+                            name_length++;
+                            idx++;
                             break;                                              
                     case 3: residues_chars[idx] = lines[i][j]; 
                             residues_chars[idx+1] = '\0';
@@ -411,7 +396,7 @@ int main(int argc, char * argv[])
     Protein* protein;
     unsigned long idx;
     //protein = parse("test.txt");
-    protein = parse("pdb5wf5.ent");
+    protein = parse("pdb1jm7.ent");
     for(idx = 0; idx < protein->nr_atoms; ++idx)
     {
         printf("%s ", protein->atoms[idx]->name);
