@@ -11,9 +11,9 @@ Atom * newAtom(char *name, double x, double y, double z)
     Atom *atom = malloc(sizeof(*atom));
     atom->name = malloc(5 * sizeof(char));
     strcpy(atom->name, name);
-    atom->x = 0;
-    atom->y = 0;
-    atom->z = 0;
+    atom->x = x;
+    atom->y = y;
+    atom->z = z;
     return atom;
 }
 
@@ -40,7 +40,7 @@ Protein * newProtein(char *name, unsigned long nr_residues, unsigned long nr_ato
     return protein;
 }
 
-char *getProteinName(char *filecontent, unsigned long filesize)
+char *getProteinName(char *filecontent)
 {
     char *name;    
     char *ptr;
@@ -177,8 +177,6 @@ void getInformation(const char ** lines, const int noflines, char** name,
         printf("%s %s %s %.2f %.2f %.2f\n",name[i],residues[i],
                residue_number[i],coordinate1[i],coordinate2[i],coordinate3[i]);
     }  
-
-
 }                                                                                             
 
 char * readFromFile(const char *filename, unsigned long *filesize)
@@ -287,24 +285,23 @@ unsigned long *getResidueLengths(char **residues, char **residue_number,
     return res_lengths;
 }
 
-
-/*
- * Protein * writeInfoIntoStructs(char **name, char **residues, char *protein_name,
-                               unsigned long nLines, double* coordinate1,
-                                                     double* coordinate2,
-                                                     double* coordinate3)
+Protein * writeInfoIntoStructs(char **name, char **residues, char **residue_number, 
+                               char *protein_name, unsigned long nLines,
+                               double* coordinate1,
+                               double* coordinate2,
+                               double* coordinate3)
 {
     unsigned long nofatoms, nofresidues, atom_idx, res_idx, *res_lengths;
-    char *temp;
 
-    Protein protein;    
+    Protein *protein;    
     nofatoms = nLines;
-    res_lengths = getResidueLengths(residues, nLines, &nofresidues);
+    res_lengths = getResidueLengths(residues, residue_number,
+                                    nLines, &nofresidues);
     protein = newProtein(protein_name, nofresidues, nofatoms);
     
     for(atom_idx = 0; atom_idx < nofatoms; ++atom_idx)
     {
-        protein->atoms[atom_idx] = newAtom(name[atom_idx][0],
+        protein->atoms[atom_idx] = newAtom(name[atom_idx],
                                            coordinate1[atom_idx], 
                                            coordinate2[atom_idx],
                                            coordinate3[atom_idx]);
@@ -316,10 +313,12 @@ unsigned long *getResidueLengths(char **residues, char **residue_number,
         protein->residues[res_idx] = newResidue(residues[atom_idx],
                                                 res_lengths[res_idx]);
         protein->residues[res_idx]->atoms = protein->atoms[atom_idx];
+        protein->cAlphas[res_idx] = protein->atoms[atom_idx + 1];
         atom_idx += res_lengths[res_idx];
     }
+
+    return protein;
 }
-*/
 
 Protein* parse(char *filename)
 {
@@ -327,6 +326,7 @@ Protein* parse(char *filename)
     char *filecontent, *protein_name, **lines, **name, **residues,
          **residue_number;
     double *coordinate1, *coordinate2, *coordinate3;
+    Protein *protein;
 
     filecontent = readFromFile(filename, &filesize);
     lines = getRelevantLines(filecontent, &nLines);
@@ -342,11 +342,20 @@ Protein* parse(char *filename)
     getInformation((const char **)lines, nLines, name, residues, residue_number, 
                    coordinate1, coordinate2, coordinate3);    
 
-    protein_name = getProteinName(filecontent, filesize);
+    protein_name = getProteinName(filecontent);
 
     residue_lengths = getResidueLengths(residues,residue_number,nLines,
                                        nofresidues);
-    //Write information into structs
+    protein = writeInfoIntoStructs(name, residues, residue_number, protein_name, nLines,
+                                   coordinate1, coordinate2, coordinate3); 
+    for(idx = 0; idx < nLines; ++idx)
+    {
+        printf("%s ", protein->atoms[idx]->name);
+
+        printf("%lf ", protein->atoms[idx]->x);
+        printf("%lf ", protein->atoms[idx]->y);
+        printf("%lf\n", protein->atoms[idx]->z);
+    }
     free(coordinate1);
     free(coordinate2);
     free(coordinate3);
@@ -363,9 +372,11 @@ Protein* parse(char *filename)
     free(residues);
     free(filecontent);
     free(lines);
+
+    return protein;
 }
 
-void freeProteinStruct(Protein *protein)
+/*void freeProteinStruct(Protein *protein)
 {
     unsigned long idx;
     for(idx = 0; idx < protein->nr_residues; idx++)
@@ -381,7 +392,7 @@ void freeProteinStruct(Protein *protein)
     free(protein->atoms);
     free(protein->residues);
     free(protein);    
-}
+}*/
 
 int main(int argc, char * argv[])
 {
