@@ -210,7 +210,7 @@ char * readFromFile(const char *filename, unsigned long *filesize)
     return filecontent;
 }
 
-char ** getRelevantLines(char *filecontent, unsigned long *nLines)
+char ** getRelevantLines(char *filecontent, unsigned long *nr_lines)
 {
     unsigned long idx, n;
     char **lines, *ptr;
@@ -245,11 +245,11 @@ char ** getRelevantLines(char *filecontent, unsigned long *nLines)
         *ptr = '\0';
     }
 
-    *nLines = n; 
+    *nr_lines = n; 
     return lines;
 }
 
-unsigned long *getResidueLengths(char **residues, char **residue_number,
+unsigned long *getResidueLengths(char **residue_number,
                                  unsigned long nLines,
                                  unsigned long *nofresidues)
 {
@@ -297,8 +297,7 @@ Protein * writeInfoIntoStructs(char **name, char **residues, char **residue_numb
 
     Protein *protein;    
     nofatoms = nLines;
-    res_lengths = getResidueLengths(residues, residue_number,
-                                    nLines, &nofresidues);
+    res_lengths = getResidueLengths(residue_number, nLines, &nofresidues);
     protein = newProtein(protein_name, nofresidues, nofatoms);
     
     for(atom_idx = 0; atom_idx < nofatoms; ++atom_idx)
@@ -318,54 +317,50 @@ Protein * writeInfoIntoStructs(char **name, char **residues, char **residue_numb
         protein->cAlphas[res_idx] = protein->atoms[atom_idx + 1];
         atom_idx += res_lengths[res_idx];
     }
-
+    free(res_lengths);
     return protein;
 }
 
 Protein* parse(char *filename)
 {
-    unsigned long nLines, filesize, idx, *nofresidues, *residue_lengths;
+    unsigned long nr_lines, filesize, idx, *nofresidues;
     char *filecontent, *protein_name, **lines, **name, **residues,
          **residue_number;
     double *coordinate1, *coordinate2, *coordinate3;
     Protein *protein;
 
     filecontent = readFromFile(filename, &filesize);
-    lines = getRelevantLines(filecontent, &nLines);
+    lines = getRelevantLines(filecontent, &nr_lines);
+    protein_name = getProteinName(filecontent);
+    free(filecontent);
 
-    name = malloc(nLines * sizeof(char*));
-    residues = malloc(nLines * sizeof(char*));
-    residue_number = malloc(nLines * sizeof(char*));
-    coordinate1 = malloc(nLines * sizeof(double));    
-    coordinate2 = malloc(nLines * sizeof(double));
-    coordinate3 = malloc(nLines * sizeof(double));
+    /* create the arrays to store the relevant information */
+    name = malloc(nr_lines * sizeof(char*));
+    residues = malloc(nr_lines * sizeof(char*));
+    residue_number = malloc(nr_lines * sizeof(char*));
+    coordinate1 = malloc(nr_lines * sizeof(double));    
+    coordinate2 = malloc(nr_lines * sizeof(double));
+    coordinate3 = malloc(nr_lines * sizeof(double));
     nofresidues = malloc(sizeof(unsigned long));
 
-    getInformation((const char **)lines, nLines, name, residues, residue_number, 
+    getInformation((const char **)lines, nr_lines, name, residues, residue_number, 
                    coordinate1, coordinate2, coordinate3);    
 
-    protein_name = getProteinName(filecontent);
-
-    residue_lengths = getResidueLengths(residues,residue_number,nLines,
-                                       nofresidues);
-    protein = writeInfoIntoStructs(name, residues, residue_number, protein_name, nLines,
+    protein = writeInfoIntoStructs(name, residues, residue_number, protein_name, nr_lines,
                                    coordinate1, coordinate2, coordinate3); 
-   
     free(coordinate1);
     free(coordinate2);
     free(coordinate3);
     free(nofresidues);
-    for(idx = 0; idx < nLines; idx++)
+    for(idx = 0; idx < nr_lines; idx++)
     {
         free(name[idx]);
         free(residues[idx]);
         free(residue_number[idx]);
     }
-    free(residue_lengths);
     free(residue_number);
     free(name);
     free(residues);
-    free(filecontent);
     free(lines);
 
     return protein;
@@ -395,8 +390,8 @@ int main(int argc, char * argv[])
 {
     Protein* protein;
     unsigned long idx;
-    //protein = parse("test.txt");
-    protein = parse("pdb1jm7.ent");
+    protein = parse("test.txt");
+    //protein = parse("pdb1jm7.ent");
     for(idx = 0; idx < protein->nr_atoms; ++idx)
     {
         printf("%s ", protein->atoms[idx]->name);
