@@ -124,6 +124,10 @@ void getInformation(const char ** lines, const int noflines, char** name,
                             residues_length++;
                             idx++;                                              
                             break;                                              
+                    case 4: previous_space = true;
+                            count++;
+                            idx = 0;
+                            break;
                     case 5: residue_number_chars[idx] = lines[i][j];
                             residue_number_chars[idx+1] = '\0';
                             residue_number_length++;
