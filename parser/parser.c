@@ -20,7 +20,7 @@ Atom * newAtom(char *name, double x, double y, double z)
 Residue * newResidue(char *name, unsigned long nr_atoms)
 {
     Residue *residue = malloc(sizeof(*residue));
-    residue->atoms = malloc(nr_atoms * sizeof(residue->atoms));
+    residue->atoms;
     residue->name = malloc(4 * sizeof(char));
     strcpy(residue->name, name);
     residue->nr_atoms = nr_atoms;
@@ -169,14 +169,6 @@ void getInformation(const char ** lines, const int noflines, char** name,
         residues_length = 0;
         residue_number_length = 0;
     }   
-    /*
-    * only relevant for testing
-    */
-    for(int i = 0; i < noflines;i++)
-    {
-        printf("%s %s %s %.2f %.2f %.2f\n",name[i],residues[i],
-               residue_number[i],coordinate1[i],coordinate2[i],coordinate3[i]);
-    }  
 }                                                                                             
 
 char * readFromFile(const char *filename, unsigned long *filesize)
@@ -348,14 +340,7 @@ Protein* parse(char *filename)
                                        nofresidues);
     protein = writeInfoIntoStructs(name, residues, residue_number, protein_name, nLines,
                                    coordinate1, coordinate2, coordinate3); 
-    for(idx = 0; idx < nLines; ++idx)
-    {
-        printf("%s ", protein->atoms[idx]->name);
-
-        printf("%lf ", protein->atoms[idx]->x);
-        printf("%lf ", protein->atoms[idx]->y);
-        printf("%lf\n", protein->atoms[idx]->z);
-    }
+   
     free(coordinate1);
     free(coordinate2);
     free(coordinate3);
@@ -376,26 +361,44 @@ Protein* parse(char *filename)
     return protein;
 }
 
-/*void freeProteinStruct(Protein *protein)
+void freeProteinStruct(Protein *protein)
 {
     unsigned long idx;
     for(idx = 0; idx < protein->nr_residues; idx++)
     {
-        free(&(protein->residues[idx].atoms));
-        free(&(protein->residues[idx]));
+        free(protein->residues[idx]->name);
+        free(protein->residues[idx]);
     }
     for(idx = 0; idx < protein->nr_atoms; idx++)
     {
-        free(&(protein->atoms[idx]));
+        free(protein->atoms[idx]->name);
+        free(protein->atoms[idx]);
     }
     free(protein->cAlphas);
     free(protein->atoms);
     free(protein->residues);
+    free(protein->name);
     free(protein);    
-}*/
+}
 
 int main(int argc, char * argv[])
 {
-    parse("test.txt");
+    Protein* protein;
+    unsigned long idx;
+    protein = parse("test.txt");
     //parse("pdb5wf5.ent");
+    for(idx = 0; idx < protein->nr_atoms; ++idx)
+    {
+        printf("%s ", protein->atoms[idx]->name);
+
+        printf("%lf ", protein->atoms[idx]->x);
+        printf("%lf ", protein->atoms[idx]->y);
+        printf("%lf\n", protein->atoms[idx]->z);
+    }
+    for(idx = 0; idx < protein->nr_residues; idx++)
+    {
+        printf("%s %lu\n", protein->residues[idx]->name, protein->residues[idx]->nr_atoms);
+    }
+    printf("%s %lu %lu\n", protein->name, protein->nr_atoms, protein->nr_residues);
+    freeProteinStruct(protein);
 }
