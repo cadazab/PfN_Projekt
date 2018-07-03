@@ -6,6 +6,9 @@
 #include "parser.h"
 #include "protein.h"
 
+/*
+* creates and initialises a new atom struct
+*/
 Atom * newAtom(const char *name, const double x, const double y, const double z)
 {
     Atom *atom = malloc(sizeof(*atom));
@@ -17,6 +20,9 @@ Atom * newAtom(const char *name, const double x, const double y, const double z)
     return atom;
 }
 
+/*
+* creates and initialises a new residue struct
+*/
 Residue * newResidue(const char *name, const unsigned long nr_atoms)
 {
     Residue *residue = malloc(sizeof(*residue));
@@ -27,6 +33,9 @@ Residue * newResidue(const char *name, const unsigned long nr_atoms)
     return residue;
 }
 
+/*
+* creates and initialises a new protein struct
+*/
 Protein * newProtein(const char *name, const unsigned long nr_residues, const unsigned long nr_atoms)
 {
     Protein *protein = malloc(sizeof(*protein));
@@ -40,6 +49,9 @@ Protein * newProtein(const char *name, const unsigned long nr_residues, const un
     return protein;
 }
 
+/*
+* searches th file for the name of the protein
+*/
 char *getProteinName(char *filecontent)
 {
     char *name;    
@@ -55,6 +67,10 @@ char *getProteinName(char *filecontent)
     return name; 
 }
 
+/*
+* searches every line with relevant information to save that information
+* in arrays 
+*/
 void getInformation(const char ** lines, const unsigned long nr_lines, char** name,
                     char** residues, char ** residues_number,
                     double* coordinate1,
