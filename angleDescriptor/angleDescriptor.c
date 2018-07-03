@@ -3,7 +3,8 @@
 #include <math.h>
 
 #include "../protein.h"
-#include "../nGram.h"
+#include "../Distance/nGram.h"
+#include "angleDescriptor.h"
 
 typedef struct Vector{
   double x;
@@ -11,10 +12,7 @@ typedef struct Vector{
   double z;
 }Vector;
 
-typedef struct Angle{
-  double angle;
-  double distance;
-}Angle;
+
 
 Vector cross_product(Vector a, Vector b){
   Vector result;
@@ -68,11 +66,11 @@ Vector create_vector(Atom atom){
   return result;
 }
 
-Angle get_angle(Protein protein){
+Angle *get_angle(Protein protein){
   Angle* result;
   unsigned long nr_ngrams = numberOfNGrams(&protein,6);
   result = malloc(sizeof(*result) * nr_ngrams);
-  nGram* n_grams = generateNGrams(protein,6);
+  nGram* n_grams = generateNGrams(&protein,6);
   unsigned int i;
   for(i = 0; i < nr_ngrams; i++){
     Vector v1,v2,v3,v6;
@@ -86,10 +84,10 @@ Angle get_angle(Protein protein){
   return result;
 }
 
-void free_angle(*Angle angle){
+void free_angle(Angle *angle){
   free(angle);
 }
-
+/**
 int main(int argc, char *argv[]){
   Vector a;
   Vector b;
@@ -110,5 +108,4 @@ int main(int argc, char *argv[]){
   printf("angle:%f°\n",angle(a,b,c,d));
   return EXIT_SUCCESS;
 }
-
-  
+ */ 
