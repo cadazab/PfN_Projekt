@@ -113,17 +113,38 @@ void getInformation(const char ** lines, const int noflines, char** name,
                 * information part
                 */
                 switch(count)                                                   
-                {                                                               
-                    case 2: name_chars[idx] = lines[i][j];                      
-                            name_chars[idx+1] = '\0';
-                            name_length++;
-                            idx++;                                              
+                {                                               
+                            /*
+                            * in case there is an residue name with 4 
+                            * characters and an atom name with 3 characters, 
+                            * there is the special case that atom name and
+                            * residue name are connected
+                            */
+                    case 2: if(idx == 4)
+                            {
+                                count++;
+                                residue_chars[0] = lines[i][j];
+                                residue_chasrs[1] = '\0';
+                                idx = 1;
+                            }
+                            else
+                            {
+                                name_chars[idx] = lines[i][j];                      
+                                name_chars[idx+1] = '\0';
+                                name_length++;
+                                idx++;
+                            }                                              
                             break;                                              
                     case 3: residues_chars[idx] = lines[i][j]; 
                             residues_chars[idx+1] = '\0';
                             residues_length++;
                             idx++;                                              
                             break;                                              
+                            /*
+                            * this case exists to prevent problems if the 
+                            * residue number is 4 characters long and thus
+                            * connected with the previous column
+                            */
                     case 4: previous_space = true;
                             count++;
                             idx = 0;
