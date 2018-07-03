@@ -6,9 +6,11 @@
 #include <assert.h>
 
 #include "protein.h"
+#include "parser/parser.h"
 
 #define DIE() die_with_usage(argv[0]);
 
+typedef Protein* Parsfunc (const char *filename);
 typedef void Fileprocessorfunc (const char *filename, void *data);
 
 /*
@@ -33,44 +35,10 @@ void die_with_usage(const char* progname) {
     exit(EXIT_FAILURE);
 }
 
-/*
-TODO use function in parser.h/c as soon as it compiles and fixes its 
-termination problem in current implementation
- */
-char * readFromFile(const char *filename, unsigned long *filesize)
-{
-    FILE *fp = fopen(filename, "r");
-    unsigned long fs;
-    char *filecontent;
-    
-    if(fp == NULL)
-    {
-        fprintf(stderr, "%s: cannot open file \"%s\"\n", __func__, filename);
-        return NULL;
-    }
-    if(fseek(fp, 0, SEEK_END) != 0)
-    {
-        fprintf(stderr, "%s: fseek failed\n", __func__);
-    }
-    fs = ftell(fp);
-    rewind(fp);
-    filecontent = malloc(sizeof(*filecontent) * (fs+1));
-    if(fread(filecontent, sizeof(*filecontent), fs, fp) != fs)
-    {
-        fprintf(stderr, "%s: fread failed\n", __func__);
-        return NULL;
-    }
-    filecontent[fs] = '\0';
-    *filesize = fs+1;
-    fclose(fp);
-
-    return filecontent;
-}
-
 /* 
 TODO remove this debug function
 */
-void print_func(const char* file , void *data) {
+void print_func(const char *file , void *data) {
     (void) data;
     printf("Filename: %s\n", file);
 }
