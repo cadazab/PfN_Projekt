@@ -6,7 +6,7 @@
 #include "parser.h"
 #include "protein.h"
 
-Atom * newAtom(char *name, double x, double y, double z)
+Atom * newAtom(const char *name, const double x, const double y, const double z)
 {
     Atom *atom = malloc(sizeof(*atom));
     atom->name = malloc(5 * sizeof(char));
@@ -17,7 +17,7 @@ Atom * newAtom(char *name, double x, double y, double z)
     return atom;
 }
 
-Residue * newResidue(char *name, unsigned long nr_atoms)
+Residue * newResidue(const char *name, const unsigned long nr_atoms)
 {
     Residue *residue = malloc(sizeof(*residue));
     residue->atoms = NULL;
@@ -27,7 +27,7 @@ Residue * newResidue(char *name, unsigned long nr_atoms)
     return residue;
 }
 
-Protein * newProtein(char *name, unsigned long nr_residues, unsigned long nr_atoms)
+Protein * newProtein(const char *name, const unsigned long nr_residues, const unsigned long nr_atoms)
 {
     Protein *protein = malloc(sizeof(*protein));
     protein->residues = malloc(nr_residues * sizeof(protein->residues));
@@ -55,20 +55,18 @@ char *getProteinName(char *filecontent)
     return name; 
 }
 
-void getInformation(const char ** lines, const int noflines, char** name,
-                    char** residues, char ** residue_number,
+void getInformation(const char ** lines, const unsigned long nr_lines, char** name,
+                    char** residues, char ** residues_number,
                     double* coordinate1,
                     double* coordinate2, 
                     double* coordinate3) 
-{                                                                               
-    int idx = 0,                                                                
-        count = 0;                                                              
-    unsigned long name_length = 0, residues_length = 0,
-                  residue_number_length = 0;
+{                                                                                                                                             
+    unsigned long name_length = 0, residues_length = 0, count = 0, idx = 0,
+                  residues_number_length = 0;
     bool previous_space = false;                                                
     char * name_chars,                                                          
          * residues_chars,                                                      
-         * residue_number_chars,
+         * residues_number_chars,
          * coordinate1_chars,                                                   
          * coordinate2_chars,                                                   
          * coordinate3_chars;                                                   
@@ -76,7 +74,7 @@ void getInformation(const char ** lines, const int noflines, char** name,
     /*
     * going through every line   
     */                                                                        
-    for(int i = 0; i < noflines; i++)                                           
+    for(int i = 0; i < nr_lines; i++)                                           
     {
         /*
         * allocating the help-array where the relevant chars of one line 
@@ -84,7 +82,7 @@ void getInformation(const char ** lines, const int noflines, char** name,
         */                                                                           
         name_chars = malloc(sizeof(char)*10);                                   
         residues_chars = malloc(sizeof(char)*10);                               
-        residue_number_chars = malloc(sizeof(char));
+        residues_number_chars = malloc(sizeof(char));
         coordinate1_chars = malloc(sizeof(char)*10);                            
         coordinate2_chars = malloc(sizeof(char)*10);                            
         coordinate3_chars = malloc(sizeof(char)*10);
@@ -134,9 +132,9 @@ void getInformation(const char ** lines, const int noflines, char** name,
                             count++;
                             idx = 0;
                             break;
-                    case 5: residue_number_chars[idx] = lines[i][j];
-                            residue_number_chars[idx+1] = '\0';
-                            residue_number_length++;
+                    case 5: residues_number_chars[idx] = lines[i][j];
+                            residues_number_chars[idx+1] = '\0';
+                            residues_number_length++;
                             break;
                     case 6: coordinate1_chars[idx] = lines[i][j];  
                             coordinate1_chars[idx+1] = '\0';
@@ -158,10 +156,10 @@ void getInformation(const char ** lines, const int noflines, char** name,
         */                                    
         name[i] = malloc((name_length+1)*sizeof(char));
         residues[i] = malloc((residues_length+1)*sizeof(char));                          
-        residue_number[i] = malloc((residue_number_length+1)*sizeof(char));
+        residues_number[i] = malloc((residues_number_length+1)*sizeof(char));
         strcpy(name[i],name_chars);
         strcpy(residues[i],residues_chars);
-        strcpy(residue_number[i],residue_number_chars);
+        strcpy(residues_number[i],residues_number_chars);
         sscanf(coordinate1_chars,"%lf",&coordinate1[i]);                         
         sscanf(coordinate2_chars,"%lf",&coordinate2[i]);                         
         sscanf(coordinate3_chars,"%lf",&coordinate3[i]);                         
@@ -170,14 +168,14 @@ void getInformation(const char ** lines, const int noflines, char** name,
         */
         free(name_chars);                                                       
         free(residues_chars);                                                   
-        free(residue_number_chars);
+        free(residues_number_chars);
         free(coordinate1_chars);                                                
         free(coordinate2_chars);                                                
         free(coordinate3_chars);                                                
         count = 0;
         name_length = 0;
         residues_length = 0;
-        residue_number_length = 0;
+        residues_number_length = 0;
     }   
 }                                                                                             
 
@@ -212,20 +210,20 @@ char * readFromFile(const char *filename, unsigned long *filesize)
 
 char ** getRelevantLines(char *filecontent, unsigned long *nr_lines)
 {
-    unsigned long idx, n;
+    unsigned long idx, nr_lines_counter;
     char **lines, *ptr;
 
     ptr = filecontent;
-    n = 0;
+    nr_lines_counter = 0;
 
     /*count the number of relevant lines (starting with "ATOM")*/
     while((*ptr != '\0') && (strstr(ptr, "\nATOM") != NULL))
     {
         ptr = strstr(ptr, "\nATOM") + 1;
-        ++n;
+        ++nr_lines_counter;
     }
     ptr = filecontent;
-    lines = malloc(n * sizeof(*lines));
+    lines = malloc(nr_lines_counter * sizeof(*lines));
     idx = 0;
    
     /*save the relevant lines*/ 
@@ -238,69 +236,69 @@ char ** getRelevantLines(char *filecontent, unsigned long *nr_lines)
     }
 
     /*terminate the individual lines with '\0'*/
-    for(idx = 0; idx < n; ++idx)
+    for(idx = 0; idx < nr_lines_counter; ++idx)
     {
         ptr = lines[idx];
         ptr = strstr(ptr, "\n");
         *ptr = '\0';
     }
 
-    *nr_lines = n; 
+    *nr_lines = nr_lines_counter; 
     return lines;
 }
 
-unsigned long *getResidueLengths(char **residue_number,
-                                 unsigned long nLines,
-                                 unsigned long *nofresidues)
+unsigned long *getResidueLengths(char **residues_number,
+                                 const unsigned long nr_lines,
+                                 unsigned long *nr_residues)
 {
-    unsigned long atom_idx, res_idx, nResidues, *res_lengths;
+    unsigned long atom_idx, res_idx, nr_residues_counter, *res_lengths;
     char *temp;
    
-    temp = residue_number[0];
-    nResidues = 1;
-    for(atom_idx = 1; atom_idx < nLines; ++atom_idx)
+    temp = residues_number[0];
+    nr_residues_counter = 1;
+    for(atom_idx = 1; atom_idx < nr_lines; ++atom_idx)
     {
-        if(strcmp(residue_number[atom_idx], temp))
+        if(strcmp(residues_number[atom_idx], temp))
         {
-            ++nResidues;
-            temp = residue_number[atom_idx];
+            ++nr_residues_counter;
+            temp = residues_number[atom_idx];
         }
     }
-    res_lengths = calloc(nResidues, sizeof(unsigned long));
-    temp = residue_number[0];
+    res_lengths = calloc(nr_residues_counter, sizeof(unsigned long));
+    temp = residues_number[0];
     res_idx = 0;
-    for(atom_idx = 0; atom_idx < nLines; ++atom_idx)
+    for(atom_idx = 0; atom_idx < nr_lines; ++atom_idx)
     {
-        if(!strcmp(residue_number[atom_idx], temp))
+        if(!strcmp(residues_number[atom_idx], temp))
         {
             ++res_lengths[res_idx]; 
         }
         else
         {
-            temp = residue_number[atom_idx];
+            temp = residues_number[atom_idx];
             ++res_idx;
             ++res_lengths[res_idx];
         }
     }
-    *nofresidues = nResidues;
+    *nr_residues = nr_residues_counter;
 
     return res_lengths;
 }
 
-Protein * writeInfoIntoStructs(char **name, char **residues, char **residue_number, 
-                               char *protein_name, unsigned long nLines,
-                               double* coordinate1,
-                               double* coordinate2,
-                               double* coordinate3)
+Protein * writeInfoIntoStructs(const char **name, const char **residues, char **residues_number, 
+                               const char *protein_name, const unsigned long nr_lines,
+                               const double* coordinate1,
+                               const double* coordinate2,
+                               const double* coordinate3)
 {
-    unsigned long nofatoms, nofresidues, atom_idx, res_idx, *res_lengths;
+    unsigned long nr_atoms, nr_residues, atom_idx, res_idx, *res_lengths;
 
     Protein *protein;    
-    nofatoms = nLines;
-    res_lengths = getResidueLengths(residue_number, nLines, &nofresidues);
-    protein = newProtein(protein_name, nofresidues, nofatoms);
+    nr_atoms = nr_lines;
+    res_lengths = getResidueLengths(residues_number, nr_lines, &nr_residues);
+    protein = newProtein(protein_name, nr_residues, nr_atoms);
     
-    for(atom_idx = 0; atom_idx < nofatoms; ++atom_idx)
+    for(atom_idx = 0; atom_idx < nr_atoms; ++atom_idx)
     {
         protein->atoms[atom_idx] = newAtom(name[atom_idx],
                                            coordinate1[atom_idx], 
@@ -309,7 +307,7 @@ Protein * writeInfoIntoStructs(char **name, char **residues, char **residue_numb
     }
 
     atom_idx = 0;
-    for(res_idx = 0; res_idx < nofresidues; ++res_idx)
+    for(res_idx = 0; res_idx < nr_residues; ++res_idx)
     {
         protein->residues[res_idx] = newResidue(residues[atom_idx],
                                                 res_lengths[res_idx]);
@@ -323,42 +321,43 @@ Protein * writeInfoIntoStructs(char **name, char **residues, char **residue_numb
 
 Protein* parse(char *filename)
 {
-    unsigned long nr_lines, filesize, idx, *nofresidues;
+    unsigned long nr_lines, filesize, idx, *nr_residues;
     char *filecontent, *protein_name, **lines, **name, **residues,
-         **residue_number;
+         **residues_number;
     double *coordinate1, *coordinate2, *coordinate3;
     Protein *protein;
 
     filecontent = readFromFile(filename, &filesize);
     lines = getRelevantLines(filecontent, &nr_lines);
     protein_name = getProteinName(filecontent);
-    free(filecontent);
 
     /* create the arrays to store the relevant information */
     name = malloc(nr_lines * sizeof(char*));
     residues = malloc(nr_lines * sizeof(char*));
-    residue_number = malloc(nr_lines * sizeof(char*));
+    residues_number = malloc(nr_lines * sizeof(char*));
     coordinate1 = malloc(nr_lines * sizeof(double));    
     coordinate2 = malloc(nr_lines * sizeof(double));
     coordinate3 = malloc(nr_lines * sizeof(double));
-    nofresidues = malloc(sizeof(unsigned long));
+    nr_residues = malloc(sizeof(unsigned long));
 
-    getInformation((const char **)lines, nr_lines, name, residues, residue_number, 
+    getInformation((const char **)lines, nr_lines, name, residues, residues_number, 
                    coordinate1, coordinate2, coordinate3);    
-
-    protein = writeInfoIntoStructs(name, residues, residue_number, protein_name, nr_lines,
+    
+    protein = writeInfoIntoStructs((const char **) name, (const char **) residues, 
+                                   residues_number, protein_name, nr_lines,
                                    coordinate1, coordinate2, coordinate3); 
     free(coordinate1);
     free(coordinate2);
     free(coordinate3);
-    free(nofresidues);
+    free(nr_residues);
     for(idx = 0; idx < nr_lines; idx++)
     {
         free(name[idx]);
         free(residues[idx]);
-        free(residue_number[idx]);
+        free(residues_number[idx]);
     }
-    free(residue_number);
+    free(filecontent);
+    free(residues_number);
     free(name);
     free(residues);
     free(lines);
@@ -390,8 +389,10 @@ int main(int argc, char * argv[])
 {
     Protein* protein;
     unsigned long idx;
-    protein = parse("test.txt");
+    //protein = parse("test.txt");
     //protein = parse("pdb1jm7.ent");
+    protein = parse("pdb5wf5.ent");    
+    
     for(idx = 0; idx < protein->nr_atoms; ++idx)
     {
         printf("%s ", protein->atoms[idx]->name);
@@ -405,5 +406,6 @@ int main(int argc, char * argv[])
         printf("%s %lu\n", protein->residues[idx]->name, protein->residues[idx]->nr_atoms);
     }
     printf("%s %lu %lu\n", protein->name, protein->nr_atoms, protein->nr_residues);
+   
     freeProteinStruct(protein);
 }
