@@ -20,7 +20,7 @@ Atom * newAtom(char *name, double x, double y, double z)
 Residue * newResidue(char *name, unsigned long nr_atoms)
 {
     Residue *residue = malloc(sizeof(*residue));
-    residue->atoms;
+    residue->atoms = NULL;
     residue->name = malloc(4 * sizeof(char));
     strcpy(residue->name, name);
     residue->nr_atoms = nr_atoms;
@@ -120,11 +120,11 @@ void getInformation(const char ** lines, const int noflines, char** name,
                             * there is the special case that atom name and
                             * residue name are connected
                             */
-                    case 2: if(idx == 4)
+                    case 2: if(idx == 3)
                             {
                                 count++;
-                                residue_chars[0] = lines[i][j];
-                                residue_chasrs[1] = '\0';
+                                residues_chars[0] = lines[i][j];
+                                residues_chars[1] = '\0';
                                 idx = 1;
                             }
                             else
@@ -410,8 +410,8 @@ int main(int argc, char * argv[])
 {
     Protein* protein;
     unsigned long idx;
-    protein = parse("test.txt");
-    //parse("pdb5wf5.ent");
+    //protein = parse("test.txt");
+    protein = parse("pdb5wf5.ent");
     for(idx = 0; idx < protein->nr_atoms; ++idx)
     {
         printf("%s ", protein->atoms[idx]->name);
