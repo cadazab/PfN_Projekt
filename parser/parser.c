@@ -69,132 +69,77 @@ char *getProteinName(char *filecontent)
 
 /*
 * searches every line with relevant information to save that information
-* in arrays 
+* in arrays
 */
-void getInformation(const char ** lines, const unsigned long nr_lines, char** name,
+void getInformation(const char ** lines, const unsigned long nr_lines, char**name,
                     char** residues, char ** residues_number,
                     double* coordinate1,
-                    double* coordinate2, 
-                    double* coordinate3) 
-{                                                                                                                                             
-    unsigned long name_length = 0, residues_length = 0, count = 0, idx = 0,
-                  residues_number_length = 0;
-    bool previous_space = false;                                                
+                    double* coordinate2,
+                    double* coordinate3)
+{
+    unsigned long idx, idx2;
     char * name_chars,                                                          
          * residues_chars,                                                      
          * residues_number_chars,
          * coordinate1_chars,                                                   
          * coordinate2_chars,                                                   
-         * coordinate3_chars;                                                   
-                                                                                
-    /*
-    * going through every line   
-    */                                                                        
-    for(int i = 0; i < nr_lines; i++)                                           
+         * coordinate3_chars; 
+    name_chars = malloc(5 * sizeof(char));
+    residues_chars = malloc(4 * sizeof(char));
+    residues_number_chars = malloc(4 * sizeof(char));
+    coordinate1_chars = malloc(9 * sizeof(char));
+    coordinate2_chars = malloc(9 * sizeof(char));
+    coordinate3_chars = malloc(9 * sizeof(char));
+    for(idx = 0; idx < nr_lines; idx++)
     {
-        /*
-        * allocating the help-array where the relevant chars of one line 
-        * are saved in
-        */                                                                           
-        name_chars = malloc(sizeof(char)*10);                                   
-        residues_chars = malloc(sizeof(char)*10);                               
-        residues_number_chars = malloc(sizeof(char));
-        coordinate1_chars = malloc(sizeof(char)*10);                            
-        coordinate2_chars = malloc(sizeof(char)*10);                            
-        coordinate3_chars = malloc(sizeof(char)*10);
-        /*
-        * going through every character of one line
-        */                            
-        for(int j = 0;lines[i][j] != '\n';j++)                                  
-        { 
-            /*
-            * dividing one line into several tokens divided by spaces
-            */                                                                      
-            if(lines[i][j] == ' ' && false == previous_space)                   
-            {                                                                   
-                count++;                                                        
-                previous_space = true;                                          
-                idx = 0;                                                        
-            } 
-            /*
-            * checking every character that isn't space
-            */                                                                  
-            else if(lines[i][j] != ' ')                                         
-            {                                                                   
-                previous_space = false;                                         
-                /*
-                * checking if a character belongs to a relevant 
-                * information part
-                */
-                switch(count)                                                   
-                {                                               
-                    case 2: 
-                            name_chars[idx] = lines[i][j];                      
-                            name_chars[idx+1] = '\0';
-                            name_length++;
-                            idx++;
-                            break;                                              
-                    case 3: residues_chars[idx] = lines[i][j]; 
-                            residues_chars[idx+1] = '\0';
-                            residues_length++;
-                            idx++;                                              
-                            break;                                              
-                            /*
-                            * this case exists to prevent problems if the 
-                            * residue number is 4 characters long and thus
-                            * connected with the previous column
-                            */
-                    case 4: previous_space = true;
-                            count++;
-                            idx = 0;
-                            break;
-                    case 5: residues_number_chars[idx] = lines[i][j];
-                            residues_number_chars[idx+1] = '\0';
-                            residues_number_length++;
-                            break;
-                    case 6: coordinate1_chars[idx] = lines[i][j];  
-                            coordinate1_chars[idx+1] = '\0';
-                            idx++;                                              
-                            break;                                              
-                    case 7: coordinate2_chars[idx] = lines[i][j];  
-                            coordinate2_chars[idx+1] = '\0';
-                            idx++;                                              
-                            break;                                              
-                    case 8: coordinate3_chars[idx] = lines[i][j];       
-                            coordinate3_chars[idx+1] = '\0';
-                            idx++;                                              
-                            break;                                              
-                }                                                               
-            }                                                                   
-        }         
-        /*
-        * copying the help arrays as one token into the information arrays
-        */                                    
-        name[i] = malloc((name_length+1)*sizeof(char));
-        residues[i] = malloc((residues_length+1)*sizeof(char));                          
-        residues_number[i] = malloc((residues_number_length+1)*sizeof(char));
-        strcpy(name[i],name_chars);
-        strcpy(residues[i],residues_chars);
-        strcpy(residues_number[i],residues_number_chars);
-        sscanf(coordinate1_chars,"%lf",&coordinate1[i]);                         
-        sscanf(coordinate2_chars,"%lf",&coordinate2[i]);                         
-        sscanf(coordinate3_chars,"%lf",&coordinate3[i]);                         
-        /*
-        * freeing the helping arrays
-        */
-        free(name_chars);                                                       
-        free(residues_chars);                                                   
-        free(residues_number_chars);
-        free(coordinate1_chars);                                                
-        free(coordinate2_chars);                                                
-        free(coordinate3_chars);                                                
-        count = 0;
-        name_length = 0;
-        residues_length = 0;
-        residues_number_length = 0;
-    }   
-}                                                                                             
-
+        for(idx2 = 0; idx2 < 5; idx2++)
+        {
+            name_chars[idx2] = lines[idx][idx2 + 12];
+        }
+        name_chars[5] = '\0';
+        for(idx2 = 0; idx2 < 4; idx2++)
+        {
+            residues_chars[idx2] = lines[idx][idx2 + 17];
+        }
+        residues_chars[4] = '\0';
+        for(idx2 = 0; idx2  < 4;  idx2++)
+        {
+            residues_number_chars[idx2] = lines[idx][idx2 + 22];
+        }
+        residues_number_chars[4] = '\0';
+        for(idx2 = 0; idx2 < 9; idx2++)
+        {
+            coordinate1_chars[idx2] = lines[idx][idx2 + 30];
+        }
+        coordinate1_chars[9] = '\0';  
+        for(idx2 = 0; idx2 < 9; idx2++)
+        {
+            coordinate2_chars[idx2] = lines[idx][idx2 + 38];
+        }
+        coordinate2_chars[9] = '\0';
+        for(idx2 = 0; idx2 < 9; idx2++)
+        {
+            coordinate3_chars[idx2] = lines[idx][idx2 + 46];
+        }
+        coordinate3_chars[9] = '\0';
+        name[idx] = malloc(5*sizeof(char));
+        residues[idx] = malloc(4*sizeof(char));                          
+        residues_number[idx] = malloc(4*sizeof(char));
+        strcpy(name[idx],name_chars);
+        strcpy(residues[idx],residues_chars);
+        strcpy(residues_number[idx],residues_number_chars);
+        sscanf(coordinate1_chars,"%lf",&coordinate1[idx]);                         
+        sscanf(coordinate2_chars,"%lf",&coordinate2[idx]);                         
+        sscanf(coordinate3_chars,"%lf",&coordinate3[idx]);    
+    }
+    free(name_chars);                                                       
+    free(residues_chars);                                                   
+    free(residues_number_chars);
+    free(coordinate1_chars);                                                
+    free(coordinate2_chars);                                                
+    free(coordinate3_chars);                       
+}
+ 
 char * readFromFile(const char *filename, unsigned long *filesize)
 {
     FILE *fp = fopen(filename, "r");
@@ -406,8 +351,8 @@ int main(int argc, char * argv[])
     Protein* protein;
     unsigned long idx;
     //protein = parse("test.txt");
-    //protein = parse("pdb1jm7.ent");
-    protein = parse("pdb5wf5.ent");    
+    protein = parse("pdb1jm7.ent");
+    //protein = parse("pdb5wf5.ent");    
     
     for(idx = 0; idx < protein->nr_atoms; ++idx)
     {
