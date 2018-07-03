@@ -14,9 +14,9 @@ typedef struct {
 
 typedef struct {
     char *name;
-    Residue *residues; 
-    Atom *atoms;
-    Atom *cAlphas;
+    Residue **residues; 
+    Atom **atoms;
+    Atom **cAlphas;
     unsigned long nr_residues;
     unsigned long nr_atoms;
 } Protein;
