@@ -86,45 +86,45 @@ void getInformation(const char ** lines, const unsigned long nr_lines, char**nam
          * coordinate3_chars; 
     name_chars = malloc(5 * sizeof(char));
     residues_chars = malloc(4 * sizeof(char));
-    residues_number_chars = malloc(4 * sizeof(char));
+    residues_number_chars = malloc(5 * sizeof(char));
     coordinate1_chars = malloc(9 * sizeof(char));
     coordinate2_chars = malloc(9 * sizeof(char));
     coordinate3_chars = malloc(9 * sizeof(char));
     for(idx = 0; idx < nr_lines; idx++)
     {
-        for(idx2 = 0; idx2 < 5; idx2++)
+        for(idx2 = 0; idx2 < 4; idx2++)
         {
             name_chars[idx2] = lines[idx][idx2 + 12];
         }
-        name_chars[5] = '\0';
-        for(idx2 = 0; idx2 < 4; idx2++)
+        name_chars[4] = '\0';
+        for(idx2 = 0; idx2 < 3; idx2++)
         {
             residues_chars[idx2] = lines[idx][idx2 + 17];
         }
-        residues_chars[4] = '\0';
+        residues_chars[3] = '\0';
         for(idx2 = 0; idx2  < 4;  idx2++)
         {
             residues_number_chars[idx2] = lines[idx][idx2 + 22];
         }
         residues_number_chars[4] = '\0';
-        for(idx2 = 0; idx2 < 9; idx2++)
+        for(idx2 = 0; idx2 < 8; idx2++)
         {
             coordinate1_chars[idx2] = lines[idx][idx2 + 30];
         }
-        coordinate1_chars[9] = '\0';  
-        for(idx2 = 0; idx2 < 9; idx2++)
+        coordinate1_chars[8] = '\0';  
+        for(idx2 = 0; idx2 < 8; idx2++)
         {
             coordinate2_chars[idx2] = lines[idx][idx2 + 38];
         }
-        coordinate2_chars[9] = '\0';
-        for(idx2 = 0; idx2 < 9; idx2++)
+        coordinate2_chars[8] = '\0';
+        for(idx2 = 0; idx2 < 8; idx2++)
         {
             coordinate3_chars[idx2] = lines[idx][idx2 + 46];
         }
-        coordinate3_chars[9] = '\0';
+        coordinate3_chars[8] = '\0';
         name[idx] = malloc(5*sizeof(char));
         residues[idx] = malloc(4*sizeof(char));                          
-        residues_number[idx] = malloc(4*sizeof(char));
+        residues_number[idx] = malloc(5*sizeof(char));
         strcpy(name[idx],name_chars);
         strcpy(residues[idx],residues_chars);
         strcpy(residues_number[idx],residues_number_chars);
@@ -157,7 +157,8 @@ char * readFromFile(const char *filename, unsigned long *filesize)
     }
     fs = ftell(fp);
     rewind(fp);
-    filecontent = malloc(sizeof(*filecontent) * fs);
+    filecontent = malloc(sizeof(*filecontent) * (fs + 1));
+    filecontent[fs] = '\0';
     if(fread(filecontent, sizeof(*filecontent), fs, fp) != fs)
     {
         fprintf(stderr, "%s: fread failed\n", __func__);
@@ -273,7 +274,12 @@ Protein * writeInfoIntoStructs(const char **name, const char **residues, char **
         protein->residues[res_idx] = newResidue(residues[atom_idx],
                                                 res_lengths[res_idx]);
         protein->residues[res_idx]->atoms = protein->atoms[atom_idx];
-        protein->cAlphas[res_idx] = protein->atoms[atom_idx + 1];
+
+        /* check if second atom of the residue really is the c-alpha atom */
+        if (strcmp(protein->atoms[atom_idx + 1]->name, " CA "))
+        {
+            protein->cAlphas[res_idx] = protein->atoms[atom_idx + 1]; 
+        }
         atom_idx += res_lengths[res_idx];
     }
     free(res_lengths);
@@ -350,7 +356,7 @@ int main(int argc, char * argv[])
 {
     Protein* protein;
     unsigned long idx;
-    //protein = parse("test.txt");
+//    protein = parse("test.txt");
     protein = parse("pdb1jm7.ent");
     //protein = parse("pdb5wf5.ent");    
     
@@ -364,7 +370,7 @@ int main(int argc, char * argv[])
     }
     for(idx = 0; idx < protein->nr_residues; idx++)
     {
-        printf("%s %lu\n", protein->residues[idx]->name, protein->residues[idx]->nr_atoms);
+        printf("%s %lu \n", protein->residues[idx]->name, protein->residues[idx]->nr_atoms);
     }
     printf("%s %lu %lu\n", protein->name, protein->nr_atoms, protein->nr_residues);
    
