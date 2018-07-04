@@ -276,7 +276,7 @@ Protein * writeInfoIntoStructs(const char **name, const char **residues, char **
         protein->residues[res_idx]->atoms = protein->atoms[atom_idx];
 
         /* check if second atom of the residue really is the c-alpha atom */
-        if (strcmp(protein->atoms[atom_idx + 1]->name, " CA "))
+        if (strstr(protein->atoms[atom_idx + 1]->name, "CA") != NULL)
         {
             protein->cAlphas[res_idx] = protein->atoms[atom_idx + 1]; 
         }
@@ -370,7 +370,7 @@ int main(int argc, char * argv[])
     }
     for(idx = 0; idx < protein->nr_residues; idx++)
     {
-        printf("%s %lu \n", protein->residues[idx]->name, protein->residues[idx]->nr_atoms);
+        printf("%s %lu %s\n", protein->residues[idx]->name, protein->residues[idx]->nr_atoms, protein->cAlphas[idx]->name);
     }
     printf("%s %lu %lu\n", protein->name, protein->nr_atoms, protein->nr_residues);
    
