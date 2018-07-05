@@ -7,15 +7,52 @@
 
 #include "protein.h"
 #include "parser/parser.h"
+#include "ngrams/nGram.h"
 #include "angleDescriptor/angleDescriptor.h"
 
 #define DIE() die_with_usage(argv[0]);
 
 typedef Protein* Parsefunc (const char *filename);
-typedef void Fileprocessorfunc (const char *filename, void *data);
-typedef void* Desciptorfunc (Protein* protein);
+typedef void Fileprocessorfunc (const char *filename, 
+                            Protein *protein, void *data);
+// TODO maybe const?
+typedef void* Desciptorfunc (Protein *protein);
 typedef void Freefunc(void* data);
 
+typedef struct {
+    Desciptorfunc *desc;
+    Fileprocessorfunc *print;
+    Freefunc *free_data;
+} Desciptor;
+
+Desciptor *descriptor_new(Desciptorfunc *desc, Fileprocessorfunc *print,
+                        Freefunc *free_data) {
+    Desciptor *d = malloc(sizeof *d);
+    assert(d != NULL);
+    d->desc = desc;
+    d->print = print;
+    d->free_data = free_data;
+    return d;
+}
+
+void analyze_protein(Desciptor *descriptor, const char *filename,
+                    Parsefunc parser) {
+
+    Protein *protein = parser(filename);
+    void* data = descriptor->desc(protein);
+    descriptor->print(filename, protein, data);
+    descriptor->free_data(data);
+    freeProteinStruct(protein);
+}
+
+void analyze_all_proteins(Desciptor *descriptor, char **files, 
+                        unsigned long numoffiles, Parsefunc parser) {
+    unsigned long i;
+    for (i = 0; i < numoffiles; i++) {
+        analyze_protein(descriptor, files[i], parser);
+    }
+
+}
 /*
 print a usage and exit the programm
 */
@@ -38,57 +75,15 @@ static void die_with_usage(const char* progname) {
     exit(EXIT_FAILURE);
 }
 
-/* 
-TODO remove this debug function
-*/
-void print_func(const char *file , void *data) {
-    (void) data;
-    printf("Filename: %s\n", file);
-}
-//TODO remove
-void desc_proc(const char *filename, void *data) {
+void desc_proc(const char *filename, Protein *protein, void *data) {
     Angle *angles = (Angle*) data; 
-    assert(data != NULL);
-    printf("Filename %s contains Angle %lf\n", filename, angles[0].angle);
-}
-/*
-call f for each file in files
-*/
-static void call_processfunc_for_all(char **files, unsigned int numoffiles,
-                            Fileprocessorfunc f, Freefunc fr, void **data) {
-    assert(files != NULL);
-    unsigned int i; 
-    for(i = 0; i < numoffiles; i++) {
-
-        if(data != NULL) {
-            f(files[i], data[i]);
-            if(fr != NULL) fr(data[i]);
-        }
-        else f(files[i], NULL);
+    unsigned long i, n = numberOfNGrams(protein, 6);
+    printf("Angles in %s, %s:\n", protein->name, filename);
+    for(i = 0; i < n; i++) {
+        printf("%lf\n", angles[i].angle);
     }
 }
 
-static Protein **call_parsefunc_for_all(char **files,
-                                            unsigned long numoffiles,
-                                            Parsefunc p) {
-    Protein **results = malloc(numoffiles * sizeof *results);
-    unsigned long i;
-    for(i = 0; i < numoffiles; i++) {
-        results[i] = p(files[i]);
-    }
-    return results;
-}
-
-static void **call_descriptorfunc_for_all(Protein **proteins,
-                                             unsigned long number,
-                                             Desciptorfunc d) {
-    void **results = malloc(number * sizeof *results);
-    unsigned long i;
-    for(i = 0; i < number; i++) {
-        results[i] = d(proteins[i]);
-    }
-    return results;
-}
 /*
 adding to an char* array with exponential 
 growth in size and adjust the variables
@@ -208,16 +203,6 @@ void write_output_file(const char *filename, void *data) {
     free((void*)outputfile);
 }
 
-void *dummy_descriptor(Protein *protein) {
-    if(protein == NULL) {
-        printf("Processing: NULL\n");
-    }
-    else {
-        printf("Processing: %s\n", protein->name);
-    }
-    return NULL;
-}
-
 void free_angle_wrap(void *data) {
     free_angle((Angle*) data);
 }
@@ -235,12 +220,10 @@ int main(int argc, char *argv[]){
     // we save the pointer to the memory containing a
     // single files content to free it later correctly
     unsigned long numoffiles, *filestarts;
-    Protein **proteins;
 
+    Desciptor *descriptor = NULL;
     // Declare function pointer
     Parsefunc *parser = &parse;
-    Desciptorfunc *desc = &dummy_descriptor;
-    void **descresult;
 
 
     parse_options(argc, argv, flags, &n);
@@ -269,25 +252,17 @@ int main(int argc, char *argv[]){
     }
     else {
 
-        printf("Protein einlesen beginnt\n");
-        proteins = call_parsefunc_for_all(inputfiles, numoffiles, parser);
-        printf("Proteine eingelesen\n");
         // TODO call real descriptor functions
         if(nflag) {
             printf("N-Grams descriptor with %u will be started here\n", n);
         }
         else {
             printf("Angle descriptor will be started here\n");
-            desc = (void*) &get_angle;
+            descriptor = descriptor_new((void*) &get_angle, &desc_proc,
+                                    free_angle_wrap);
 
         }
-        //print_protein(proteins[0]);
-        descresult = call_descriptorfunc_for_all(proteins, numoffiles, desc);
-        printf("Starting processing\n");
-        call_processfunc_for_all(inputfiles, numoffiles, print_func,
-                                NULL, descresult);
-
-        call_processfunc_for_all(inputfiles, numoffiles, desc_proc, &free_angle_wrap, descresult);
+        analyze_all_proteins(descriptor, inputfiles, numoffiles, parser);
 
         // we need to free the memory used for the input files in this case
         if(fflag) {
@@ -297,11 +272,9 @@ int main(int argc, char *argv[]){
             free(inputfiles);
             free(filestarts);
         }
-        for(i = 0; i < numoffiles; i++) {
-            freeProteinStruct(proteins[i]);
+        if(descriptor != NULL) {
+            free(descriptor);
         }
-        free(proteins);
-        free(descresult);
     }
 
     return EXIT_SUCCESS;
