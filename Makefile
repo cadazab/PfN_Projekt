@@ -1,16 +1,18 @@
 .PHONY: all clean cleanup test
-
+CC = clang
 CFLAGS+=-g -Wall -Werror -Wunused-parameter -Wunused-variable
 
 all: main.x
 
-main.x: main.o
-	${CC} -o $@ $^
+main.x: main.o parser/parser.o angleDescriptor/angleDescriptor.o Distance/generateNGrams.o
+	${CC} -o $@ $^ -lm
 
+%.o: %.c
+	${CC} ${CFLAGS} -c -o $@ $^ 
 clean:
 	${RM} *.o
 
 cleanup: clean
 	${RM} *.x
-test: 
-	valgrind --leak-check=full --track-origins=yes  ./main.x test.test test.test -f
+test: main.x
+	valgrind --leak-check=full --track-origins=yes ./main.x test.test -f
