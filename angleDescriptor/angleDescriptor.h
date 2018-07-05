@@ -1,14 +1,14 @@
 #ifndef ANGLEDESCRIPTOR_H
 #define ANGLEDESCRIPTOR_H
 
-typedef struct Angle{
+typedef struct {
   double angle;
   double distance;
-}Angle;
+} Angle;
 
 //Return the angle between the planes
 //created by an ngram
-Angle* get_angle(Protein protein);
+Angle* get_angle(Protein *protein);
 
 //Free the memory
 void free_angle(Angle *angle);

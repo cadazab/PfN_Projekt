@@ -3,7 +3,7 @@
 #include <math.h>
 
 #include "../protein.h"
-#include "../Distance/nGram.h"
+#include "../ngram/nGram.h"
 #include "angleDescriptor.h"
 
 typedef struct Vector{
@@ -66,21 +66,26 @@ Vector create_vector(Atom atom){
   return result;
 }
 
-Angle *get_angle(Protein protein){
+Angle *get_angle(Protein *protein){
   Angle* result;
-  unsigned long nr_ngrams = numberOfNGrams(&protein,6);
+  unsigned long nr_ngrams = numberOfNGrams(protein,6);
   result = malloc(sizeof(*result) * nr_ngrams);
-  nGram* n_grams = generateNGrams(&protein,6);
+  nGram* n_grams = generateNGrams(protein,6);
   unsigned int i;
   for(i = 0; i < nr_ngrams; i++){
     Vector v1,v2,v3,v6;
-    v1 = create_vector(n_grams[i].cAlphas[0]);
-    v2 = create_vector(n_grams[i].cAlphas[1]);
-    v3 = create_vector(n_grams[i].cAlphas[2]);
-    v6 = create_vector(n_grams[i].cAlphas[5]);
+    v1 = create_vector(*n_grams[i].cAlphas[0]);
+    v2 = create_vector(*n_grams[i].cAlphas[1]);
+    v3 = create_vector(*n_grams[i].cAlphas[2]);
+    v6 = create_vector(*n_grams[i].cAlphas[5]);
     result[i].angle = angle(v1,v2,v3,v6);
     result[i].distance = abs_val(difference(v1,v6));
   }
+  for(i = 0; i < nr_ngrams; i++) {
+
+    free(n_grams[i].cAlphas);
+  }
+  free(n_grams);
   return result;
 }
 
