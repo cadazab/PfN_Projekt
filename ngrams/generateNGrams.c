@@ -1,6 +1,6 @@
 #include <stdlib.h>
 #include <stdio.h>
-#include "protein.h"
+#include "../protein.h"
 #include "nGram.h"
 
 
@@ -53,11 +53,10 @@ nGram * generateNGrams(const Protein * protein, unsigned long n)
         {
             ngrams[i].cAlphas[j] = protein->cAlphas[j+i];
         }
-        ngrams[i].central_cAlpha = &ngrams[i].cAlphas[n/2];
+        ngrams[i].central_cAlpha = ngrams[i].cAlphas[n/2];
     }
     return ngrams;
 }
-
 
 //delete nGrams
 void deleteNGrams(nGram * ngrams)
