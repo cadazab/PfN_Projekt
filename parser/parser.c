@@ -71,67 +71,76 @@ char *getProteinName(char *filecontent)
 * searches every line with relevant information to save that information
 * in arrays
 */
-void getInformation(const char ** lines, const unsigned long nr_lines, char**name,
+void getInformation(const char ** lines, unsigned long  *nr_lines, char**name,
                     char** residues, char ** residues_number,
                     double* coordinate1,
                     double* coordinate2,
                     double* coordinate3)
 {
-    unsigned long idx, idx2;
+    unsigned long idx, idx2, writing_index = 0, starting_nr_lines;
     char * name_chars,                                                          
          * residues_chars,                                                      
          * residues_number_chars,
          * coordinate1_chars,                                                   
          * coordinate2_chars,                                                   
-         * coordinate3_chars; 
+         * coordinate3_chars,
+        altlock = ' ';
     name_chars = malloc(5 * sizeof(char));
     residues_chars = malloc(4 * sizeof(char));
     residues_number_chars = malloc(5 * sizeof(char));
     coordinate1_chars = malloc(9 * sizeof(char));
     coordinate2_chars = malloc(9 * sizeof(char));
     coordinate3_chars = malloc(9 * sizeof(char));
-    for(idx = 0; idx < nr_lines; idx++)
+    starting_nr_lines = *nr_lines;
+    for(idx = 0; idx < starting_nr_lines; idx++)
     {
-        for(idx2 = 0; idx2 < 4; idx2++)
+        altlock = lines[idx][16];
+        if(altlock == 'A' || altlock == ' ')
         {
-            name_chars[idx2] = lines[idx][idx2 + 12];
+            for(idx2 = 0; idx2 < 4; idx2++)
+            {
+                name_chars[idx2] = lines[idx][idx2 + 12];
+            }
+            name_chars[4] = '\0';
+            for(idx2 = 0; idx2 < 3; idx2++)
+            {
+                residues_chars[idx2] = lines[idx][idx2 + 17];
+            }
+            residues_chars[3] = '\0';
+            for(idx2 = 0; idx2  < 4;  idx2++)
+            {
+                residues_number_chars[idx2] = lines[idx][idx2 + 22];
+            }
+            residues_number_chars[4] = '\0';
+            for(idx2 = 0; idx2 < 8; idx2++)
+            {
+                coordinate1_chars[idx2] = lines[idx][idx2 + 30];
+            }
+            coordinate1_chars[8] = '\0';  
+            for(idx2 = 0; idx2 < 8; idx2++)
+            {
+                coordinate2_chars[idx2] = lines[idx][idx2 + 38];
+            }
+            coordinate2_chars[8] = '\0';
+            for(idx2 = 0; idx2 < 8; idx2++)
+            {
+                coordinate3_chars[idx2] = lines[idx][idx2 + 46];
+            }
+            coordinate3_chars[8] = '\0';
+            name[writing_index] = malloc(5*sizeof(char));
+            residues[writing_index] = malloc(4*sizeof(char));                          
+            residues_number[writing_index] = malloc(5*sizeof(char));
+            strcpy(name[writing_index],name_chars);
+            strcpy(residues[writing_index],residues_chars);
+            strcpy(residues_number[writing_index],residues_number_chars);
+            sscanf(coordinate1_chars,"%lf",&coordinate1[writing_index]);                         
+            sscanf(coordinate2_chars,"%lf",&coordinate2[writing_index]);                         
+            sscanf(coordinate3_chars,"%lf",&coordinate3[writing_index]);    
+            ++writing_index;
         }
-        name_chars[4] = '\0';
-        for(idx2 = 0; idx2 < 3; idx2++)
-        {
-            residues_chars[idx2] = lines[idx][idx2 + 17];
-        }
-        residues_chars[3] = '\0';
-        for(idx2 = 0; idx2  < 4;  idx2++)
-        {
-            residues_number_chars[idx2] = lines[idx][idx2 + 22];
-        }
-        residues_number_chars[4] = '\0';
-        for(idx2 = 0; idx2 < 8; idx2++)
-        {
-            coordinate1_chars[idx2] = lines[idx][idx2 + 30];
-        }
-        coordinate1_chars[8] = '\0';  
-        for(idx2 = 0; idx2 < 8; idx2++)
-        {
-            coordinate2_chars[idx2] = lines[idx][idx2 + 38];
-        }
-        coordinate2_chars[8] = '\0';
-        for(idx2 = 0; idx2 < 8; idx2++)
-        {
-            coordinate3_chars[idx2] = lines[idx][idx2 + 46];
-        }
-        coordinate3_chars[8] = '\0';
-        name[idx] = malloc(5*sizeof(char));
-        residues[idx] = malloc(4*sizeof(char));                          
-        residues_number[idx] = malloc(5*sizeof(char));
-        strcpy(name[idx],name_chars);
-        strcpy(residues[idx],residues_chars);
-        strcpy(residues_number[idx],residues_number_chars);
-        sscanf(coordinate1_chars,"%lf",&coordinate1[idx]);                         
-        sscanf(coordinate2_chars,"%lf",&coordinate2[idx]);                         
-        sscanf(coordinate3_chars,"%lf",&coordinate3[idx]);    
     }
+    *nr_lines = writing_index;
+    lines = realloc(lines,*(nr_lines)*sizeof(char*));
     free(name_chars);                                                       
     free(residues_chars);                                                   
     free(residues_number_chars);
@@ -307,7 +316,7 @@ Protein* parse(char *filename)
     coordinate3 = malloc(nr_lines * sizeof(double));
     nr_residues = malloc(sizeof(unsigned long));
 
-    getInformation((const char **)lines, nr_lines, name, residues, residues_number, 
+    getInformation((const char **)lines, &nr_lines, name, residues, residues_number, 
                    coordinate1, coordinate2, coordinate3);    
     
     protein = writeInfoIntoStructs((const char **) name, (const char **) residues, 
@@ -356,8 +365,8 @@ int main(int argc, char * argv[])
 {
     Protein* protein;
     unsigned long idx;
-//    protein = parse("test.txt");
-    protein = parse("pdb1jm7.ent");
+    protein = parse("test.txt");
+    //protein = parse("pdb1jm7.ent");
     //protein = parse("pdb5wf5.ent");    
     
     for(idx = 0; idx < protein->nr_atoms; ++idx)
