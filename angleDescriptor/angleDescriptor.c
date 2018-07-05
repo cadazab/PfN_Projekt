@@ -3,7 +3,7 @@
 #include <math.h>
 
 #include "../protein.h"
-#include "../ngram/nGram.h"
+#include "../ngrams/nGram.h"
 #include "angleDescriptor.h"
 
 typedef struct Vector{
