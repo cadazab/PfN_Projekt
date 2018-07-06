@@ -2,12 +2,13 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdbool.h>
+#include <assert.h>
 
 #include "parser.h"
-#include "protein.h"
+#include "../protein.h"
 
 /*
-* creates and initialises a new atom struct
+* Creates and initialises a new atom struct
 */
 Atom * newAtom(const char *name, const double x, const double y, const double z)
 {
@@ -21,7 +22,7 @@ Atom * newAtom(const char *name, const double x, const double y, const double z)
 }
 
 /*
-* creates and initialises a new residue struct
+* Creates and initialises a new residue struct
 */
 Residue * newResidue(const char *name, const unsigned long nr_atoms)
 {
@@ -34,7 +35,7 @@ Residue * newResidue(const char *name, const unsigned long nr_atoms)
 }
 
 /*
-* creates and initialises a new protein struct
+* Creates and initialises a new protein struct
 */
 Protein * newProtein(const char *name, const unsigned long nr_residues, const unsigned long nr_atoms)
 {
@@ -50,7 +51,41 @@ Protein * newProtein(const char *name, const unsigned long nr_residues, const un
 }
 
 /*
-* searches th file for the name of the protein
+* Opens the file and returns the filecontent as char *.
+* Returns NULL if there exists no file with the given filename.
+*/
+char * readFromFile(const char *filename, unsigned long *filesize)
+{
+    FILE *fp = fopen(filename, "r");
+    unsigned long fs;
+    char *filecontent;
+    
+    if(fp == NULL)
+    {
+        fprintf(stderr, "%s: cannot open file \"%s\"\n", __func__, filename);
+        return NULL;
+    }
+    if(fseek(fp, 0, SEEK_END) != 0)
+    {
+        fprintf(stderr, "%s: fseek failed\n", __func__);
+    }
+    fs = ftell(fp);
+    rewind(fp);
+    filecontent = malloc(sizeof(*filecontent) * (fs + 1));
+    filecontent[fs] = '\0';
+    if(fread(filecontent, sizeof(*filecontent), fs, fp) != fs)
+    {
+        fprintf(stderr, "%s: fread failed\n", __func__);
+        return NULL;
+    }
+    *filesize = fs;
+    fclose(fp);
+
+    return filecontent;
+}
+
+/*
+* Searches the file for the name of the protein.
 */
 char *getProteinName(char *filecontent)
 {
@@ -68,7 +103,49 @@ char *getProteinName(char *filecontent)
 }
 
 /*
-* searches every line with relevant information to save that information
+* Searches the file for lines starting with 'ATOM' and saves these lines.
+*/
+char ** getRelevantLines(char *filecontent, unsigned long *nr_lines)
+{
+    unsigned long idx, nr_lines_counter;
+    char **lines, *ptr;
+
+    ptr = filecontent;
+    nr_lines_counter = 0;
+
+    /*count the number of relevant lines (starting with "ATOM")*/
+    while((*ptr != '\0') && (strstr(ptr, "\nATOM") != NULL))
+    {
+        ptr = strstr(ptr, "\nATOM") + 1;
+        ++nr_lines_counter;
+    }
+    ptr = filecontent;
+    lines = malloc(nr_lines_counter * sizeof(*lines));
+    idx = 0;
+   
+    /*save the relevant lines*/ 
+    while((*ptr != '\0') && (strstr(ptr, "\nATOM") != NULL))
+    {
+        lines[idx] = strstr(ptr, "\nATOM");
+        ++lines[idx];
+        ptr = lines[idx];
+        ++idx;
+    }
+
+    /*terminate the individual lines with '\0'*/
+    for(idx = 0; idx < nr_lines_counter; ++idx)
+    {
+        ptr = lines[idx];
+        ptr = strstr(ptr, "\n");
+        *ptr = '\0';
+    }
+
+    *nr_lines = nr_lines_counter; 
+    return lines;
+}
+
+/*
+* Searches every line with relevant information to save that information
 * in arrays
 */
 void getInformation(const char ** lines, unsigned long  *nr_lines, char**name,
@@ -148,76 +225,11 @@ void getInformation(const char ** lines, unsigned long  *nr_lines, char**name,
     free(coordinate2_chars);                                                
     free(coordinate3_chars);                       
 }
- 
-char * readFromFile(const char *filename, unsigned long *filesize)
-{
-    FILE *fp = fopen(filename, "r");
-    unsigned long fs;
-    char *filecontent;
-    
-    if(fp == NULL)
-    {
-        fprintf(stderr, "%s: cannot open file \"%s\"\n", __func__, filename);
-        return NULL;
-    }
-    if(fseek(fp, 0, SEEK_END) != 0)
-    {
-        fprintf(stderr, "%s: fseek failed\n", __func__);
-    }
-    fs = ftell(fp);
-    rewind(fp);
-    filecontent = malloc(sizeof(*filecontent) * (fs + 1));
-    filecontent[fs] = '\0';
-    if(fread(filecontent, sizeof(*filecontent), fs, fp) != fs)
-    {
-        fprintf(stderr, "%s: fread failed\n", __func__);
-        return NULL;
-    }
-    *filesize = fs;
-    fclose(fp);
 
-    return filecontent;
-}
-
-char ** getRelevantLines(char *filecontent, unsigned long *nr_lines)
-{
-    unsigned long idx, nr_lines_counter;
-    char **lines, *ptr;
-
-    ptr = filecontent;
-    nr_lines_counter = 0;
-
-    /*count the number of relevant lines (starting with "ATOM")*/
-    while((*ptr != '\0') && (strstr(ptr, "\nATOM") != NULL))
-    {
-        ptr = strstr(ptr, "\nATOM") + 1;
-        ++nr_lines_counter;
-    }
-    ptr = filecontent;
-    lines = malloc(nr_lines_counter * sizeof(*lines));
-    idx = 0;
-   
-    /*save the relevant lines*/ 
-    while((*ptr != '\0') && (strstr(ptr, "\nATOM") != NULL))
-    {
-        lines[idx] = strstr(ptr, "\nATOM");
-        ++lines[idx];
-        ptr = lines[idx];
-        ++idx;
-    }
-
-    /*terminate the individual lines with '\0'*/
-    for(idx = 0; idx < nr_lines_counter; ++idx)
-    {
-        ptr = lines[idx];
-        ptr = strstr(ptr, "\n");
-        *ptr = '\0';
-    }
-
-    *nr_lines = nr_lines_counter; 
-    return lines;
-}
-
+/*
+* Counts the lengths of the individual residues and saves them in an array.
+* Writes the number of residues in the variable pointed to by *nr_residues.
+*/
 unsigned long *getResidueLengths(char **residues_number,
                                  const unsigned long nr_lines,
                                  unsigned long *nr_residues)
@@ -256,6 +268,9 @@ unsigned long *getResidueLengths(char **residues_number,
     return res_lengths;
 }
 
+/*
+* Saves the information in the protein struct.
+*/
 Protein * writeInfoIntoStructs(const char **name, const char **residues, char **residues_number, 
                                const char *protein_name, const unsigned long nr_lines,
                                const double* coordinate1,
@@ -295,6 +310,9 @@ Protein * writeInfoIntoStructs(const char **name, const char **residues, char **
     return protein;
 }
 
+/*
+* The main method. Takes ad filename as input and returns a Protein.
+*/  
 Protein* parse(char *filename)
 {
     unsigned long nr_lines, filesize, idx, *nr_residues;
@@ -304,6 +322,7 @@ Protein* parse(char *filename)
     Protein *protein;
 
     filecontent = readFromFile(filename, &filesize);
+    assert(filecontent != NULL);
     lines = getRelevantLines(filecontent, &nr_lines);
     protein_name = getProteinName(filecontent);
 
@@ -341,6 +360,9 @@ Protein* parse(char *filename)
     return protein;
 }
 
+/*
+* Method to free the allocated memory.
+*/
 void freeProteinStruct(Protein *protein)
 {
     unsigned long idx;
@@ -361,11 +383,14 @@ void freeProteinStruct(Protein *protein)
     free(protein);    
 }
 
-int main(int argc, char * argv[])
+/*
+* Main method for testing.
+*/
+int main(void)
 {
     Protein* protein;
     unsigned long idx;
-    protein = parse("test.txt");
+    protein = parse("tes.txt");
     //protein = parse("pdb1jm7.ent");
     //protein = parse("pdb5wf5.ent");    
     
@@ -379,7 +404,7 @@ int main(int argc, char * argv[])
     }
     for(idx = 0; idx < protein->nr_residues; idx++)
     {
-        printf("%s %lu %s\n", protein->residues[idx]->name, protein->residues[idx]->nr_atoms, protein->cAlphas[idx]->name);
+        printf("%s %lu %lf\n", protein->residues[idx]->name, protein->residues[idx]->nr_atoms, protein->cAlphas[idx]->x);
     }
     printf("%s %lu %lu\n", protein->name, protein->nr_atoms, protein->nr_residues);
    
