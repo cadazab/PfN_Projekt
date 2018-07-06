@@ -16,18 +16,18 @@ typedef Protein* Parsefunc (const char *filename);
 typedef void Fileprocessorfunc (const char *filename, 
                             Protein *protein, void *data);
 // TODO maybe const?
-typedef void* Desciptorfunc (Protein *protein);
+typedef void* Descriptorfunc (Protein *protein);
 typedef void Freefunc(void* data);
 
 typedef struct {
-    Desciptorfunc *desc;
+    Descriptorfunc *desc;
     Fileprocessorfunc *print;
     Freefunc *free_data;
-} Desciptor;
+} Descriptor;
 
-Desciptor *descriptor_new(Desciptorfunc *desc, Fileprocessorfunc *print,
+Descriptor *descriptor_new(Descriptorfunc *desc, Fileprocessorfunc *print,
                         Freefunc *free_data) {
-    Desciptor *d = malloc(sizeof *d);
+    Descriptor *d = malloc(sizeof *d);
     assert(d != NULL);
     d->desc = desc;
     d->print = print;
@@ -35,7 +35,7 @@ Desciptor *descriptor_new(Desciptorfunc *desc, Fileprocessorfunc *print,
     return d;
 }
 
-void analyze_protein(Desciptor *descriptor, const char *filename,
+void analyze_protein(Descriptor *descriptor, const char *filename,
                     Parsefunc parser) {
 
     Protein *protein = parser(filename);
@@ -45,7 +45,7 @@ void analyze_protein(Desciptor *descriptor, const char *filename,
     freeProteinStruct(protein);
 }
 
-void analyze_all_proteins(Desciptor *descriptor, char **files, 
+void analyze_all_proteins(Descriptor *descriptor, char **files, 
                         unsigned long numoffiles, Parsefunc parser) {
     unsigned long i;
     for (i = 0; i < numoffiles; i++) {
@@ -138,9 +138,7 @@ char **parse_files(char **inputfiles, unsigned long *filestarts,
 
 /*
 this function parses the options from argc to flags
-
 argv gets permuted by getopt
-
 */
 void parse_options(int argc, char **argv, bool *flags, unsigned int *n) {
     const char* options = "tn:f";
@@ -167,18 +165,6 @@ void parse_options(int argc, char **argv, bool *flags, unsigned int *n) {
         }
     }
 }
-
-void print_atom(Atom *atom) {
-    printf("%s", atom->name);
-    printf("x: %lf y: %lf z: %lf\n", atom->x, atom->y, atom->z);
- }
-void print_protein(Protein *p) {
-    unsigned long i;
-    printf("%s", p->name);
-    for(i = 0; i < p->nr_atoms; i++) {
-        print_atom(p->atoms[i]);
-    }
- }
 
 /*
 Generates the filename for the output file by adding a file extension
@@ -221,7 +207,7 @@ int main(int argc, char *argv[]){
     // single files content to free it later correctly
     unsigned long numoffiles, *filestarts;
 
-    Desciptor *descriptor = NULL;
+    Descriptor *descriptor = NULL;
     // Declare function pointer
     Parsefunc *parser = &parse;
 
