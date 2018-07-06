@@ -10,7 +10,9 @@
 /*
 * Creates and initialises a new atom struct
 */
-Atom * newAtom(const char *name, const double x, const double y, const double z)
+Atom * newAtom(const char *name, const double x,
+                                 const double y,
+                                 const double z)
 {
     Atom *atom = malloc(sizeof(*atom));
     atom->name = malloc(5 * sizeof(char));
@@ -37,7 +39,8 @@ Residue * newResidue(const char *name, const unsigned long nr_atoms)
 /*
 * Creates and initialises a new protein struct
 */
-Protein * newProtein(const char *name, const unsigned long nr_residues, const unsigned long nr_atoms)
+Protein * newProtein(const char *name, const unsigned long nr_residues,
+                     const unsigned long nr_atoms)
 {
     Protein *protein = malloc(sizeof(*protein));
     protein->residues = malloc(nr_residues * sizeof(protein->residues));
@@ -217,7 +220,8 @@ void getInformation(const char ** lines, unsigned long  *nr_lines, char**name,
         }
     }
     *nr_lines = writing_index;
-    lines = realloc(lines,*(nr_lines)*sizeof(char*));
+
+    free(lines);
     free(name_chars);                                                       
     free(residues_chars);                                                   
     free(residues_number_chars);
@@ -271,8 +275,10 @@ unsigned long *getResidueLengths(char **residues_number,
 /*
 * Saves the information in the protein struct.
 */
-Protein * writeInfoIntoStructs(const char **name, const char **residues, char **residues_number, 
-                               const char *protein_name, const unsigned long nr_lines,
+Protein * writeInfoIntoStructs(const char **name, const char **residues, 
+                               char **residues_number,
+                               const char *protein_name, 
+                               const unsigned long nr_lines,
                                const double* coordinate1,
                                const double* coordinate2,
                                const double* coordinate3)
@@ -311,7 +317,7 @@ Protein * writeInfoIntoStructs(const char **name, const char **residues, char **
 }
 
 /*
-* The main method. Takes ad filename as input and returns a Protein.
+* The main method. Takes a filename as input and returns a Protein.
 */  
 Protein* parse(char *filename)
 {
@@ -335,10 +341,11 @@ Protein* parse(char *filename)
     coordinate3 = malloc(nr_lines * sizeof(double));
     nr_residues = malloc(sizeof(unsigned long));
 
-    getInformation((const char **)lines, &nr_lines, name, residues, residues_number, 
-                   coordinate1, coordinate2, coordinate3);    
+    getInformation((const char **)lines, &nr_lines, name, residues,
+                    residues_number, coordinate1, coordinate2, coordinate3);    
     
-    protein = writeInfoIntoStructs((const char **) name, (const char **) residues, 
+    protein = writeInfoIntoStructs((const char **) name,
+                                   (const char **) residues, 
                                    residues_number, protein_name, nr_lines,
                                    coordinate1, coordinate2, coordinate3); 
     free(coordinate1);
@@ -355,7 +362,6 @@ Protein* parse(char *filename)
     free(residues_number);
     free(name);
     free(residues);
-    free(lines);
 
     return protein;
 }
@@ -390,9 +396,9 @@ int main(void)
 {
     Protein* protein;
     unsigned long idx;
-    protein = parse("tes.txt");
+    //protein = parse("test.txt");
     //protein = parse("pdb1jm7.ent");
-    //protein = parse("pdb5wf5.ent");    
+    protein = parse("pdb5wf5.ent");    
     
     for(idx = 0; idx < protein->nr_atoms; ++idx)
     {
