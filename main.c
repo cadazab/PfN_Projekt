@@ -59,6 +59,7 @@ void analyze_all_proteins(Descriptor *descriptor, char * const *files,
     }
 
 }
+
 /*
 print a usage and exit the programm
 */
@@ -79,15 +80,6 @@ static void die_with_usage(const char* progname) {
     "<fi> are not required\n");
 
     exit(EXIT_FAILURE);
-}
-
-void desc_proc(const char *filename, Protein *protein, void *data) {
-    Angle *angles = (Angle*) data; 
-    unsigned long i, n = numberOfNGrams(protein, 6);
-    printf("Angles in %s, %s:\n", protein->name, filename);
-    for(i = 0; i < n; i++) {
-        printf("%lf\n", angles[i].angle);
-    }
 }
 
 /*
@@ -170,21 +162,6 @@ void parse_options(int argc, char **argv, bool *flags, unsigned int *n) {
                 DIE();
         }
     }
-}
-
-/*
-TODO write actual data to a file
-*/
-void write_output_file(const char *filename, void *data) {
-    (void) data;
-    const char *outputfile = generate_outfile_name(filename);
-
-    printf("Write output for %s to %s\n", filename, outputfile);
-    free((void*)outputfile);
-}
-
-void free_angle_wrap(void *data) {
-    free_angle((Angle*) data);
 }
 
 
