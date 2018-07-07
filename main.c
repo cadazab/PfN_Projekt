@@ -13,43 +13,49 @@
 #define DIE() die_with_usage(argv[0]);
 
 typedef Protein* Parsefunc (const char *filename);
-typedef void Fileprocessorfunc (const char *filename, 
-                            Protein *protein, void *data);
-// TODO maybe const?
-typedef void* Descriptorfunc (Protein *protein);
-typedef void Freefunc(void* data);
+typedef void Descriptor (const char *infilename, const char* outfilename,
+                        Parsefunc p);
 
-typedef struct {
-    Descriptorfunc *desc;
-    Fileprocessorfunc *print;
-    Freefunc *free_data;
-} Descriptor;
 
-Descriptor *descriptor_new(Descriptorfunc *desc, Fileprocessorfunc *print,
-                        Freefunc *free_data) {
-    Descriptor *d = malloc(sizeof *d);
-    assert(d != NULL);
-    d->desc = desc;
-    d->print = print;
-    d->free_data = free_data;
-    return d;
+/*
+Generates the filename for the output file by adding a file extension
+*/
+const char *generate_outfile_name(const char *filename) {
+    const char *ending = "_result.csv";
+    unsigned long length = strlen(filename)+strlen(ending)+1;
+    char *outputfile = malloc((length)*sizeof(char));
+    assert(outputfile != NULL);
+    snprintf(outputfile, length, "%s%s", filename, ending);
+    return outputfile;
 }
 
-void analyze_protein(Descriptor *descriptor, const char *filename,
+void angle_descriptor(const char *infilename, const char *outfilename,
                     Parsefunc parser) {
 
-    Protein *protein = parser(filename);
-    void* data = descriptor->desc(protein);
-    descriptor->print(filename, protein, data);
-    descriptor->free_data(data);
-    freeProteinStruct(protein);
+    Protein *p = parser(infilename);
+    Angle *angle = get_angle(p);
+    unsigned long n = numberOfNGrams(p, 6), i;
+    printf("%s\n", outfilename);
+    FILE *out = fopen(outfilename, "w");
+    assert(out != NULL);
+    fprintf(out, "index, distance, angle\n");
+    for(i = 0; i < n; i++) {
+        fprintf(out, "%lu, %lf, %lf\n", i, angle[i].distance, angle[i].angle);
+    }
+    fclose(out);
+    freeProteinStruct(p);
+    free_angle(angle);
 }
 
-void analyze_all_proteins(Descriptor *descriptor, char **files, 
+void analyze_all_proteins(Descriptor *descriptor, char * const *files,
                         unsigned long numoffiles, Parsefunc parser) {
     unsigned long i;
+    const char *outfile;
+
     for (i = 0; i < numoffiles; i++) {
-        analyze_protein(descriptor, files[i], parser);
+        outfile = generate_outfile_name(files[i]);
+        descriptor(files[i], outfile, parser);
+        free((void*) outfile);
     }
 
 }
@@ -167,18 +173,6 @@ void parse_options(int argc, char **argv, bool *flags, unsigned int *n) {
 }
 
 /*
-Generates the filename for the output file by adding a file extension
-*/
-const char *generate_outfile_name(const char *filename) {
-    const char *ending = "_result.csv";
-    unsigned long length = strlen(filename)+strlen(ending)+1;
-    char *outputfile = malloc((length)*sizeof(char));
-    assert(outputfile != NULL);
-    snprintf(outputfile, length, "%s%s", filename, ending);
-    return outputfile;
-}
-
-/*
 TODO write actual data to a file
 */
 void write_output_file(const char *filename, void *data) {
@@ -207,9 +201,9 @@ int main(int argc, char *argv[]){
     // single files content to free it later correctly
     unsigned long numoffiles, *filestarts;
 
-    Descriptor *descriptor = NULL;
-    // Declare function pointer
+    // Initilize function pointer
     Parsefunc *parser = &parse;
+    Descriptor *descriptor = NULL;
 
 
     parse_options(argc, argv, flags, &n);
@@ -244,8 +238,7 @@ int main(int argc, char *argv[]){
         }
         else {
             printf("Angle descriptor will be started here\n");
-            descriptor = descriptor_new((void*) &get_angle, &desc_proc,
-                                    free_angle_wrap);
+            descriptor = &angle_descriptor;
 
         }
         analyze_all_proteins(descriptor, inputfiles, numoffiles, parser);
@@ -257,9 +250,6 @@ int main(int argc, char *argv[]){
             }
             free(inputfiles);
             free(filestarts);
-        }
-        if(descriptor != NULL) {
-            free(descriptor);
         }
     }
 
