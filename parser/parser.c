@@ -8,9 +8,11 @@
 #include "../protein.h"
 
 /*
-* creates and initialises a new atom struct
+* Creates and initialises a new atom struct
 */
-Atom * newAtom(const char *name, const double x, const double y, const double z)
+Atom * newAtom(const char *name, const double x,
+                                 const double y,
+                                 const double z)
 {
     Atom *atom = malloc(sizeof(*atom));
     atom->name = strdup(name);
@@ -21,7 +23,7 @@ Atom * newAtom(const char *name, const double x, const double y, const double z)
 }
 
 /*
-* creates and initialises a new residue struct
+* Creates and initialises a new residue struct
 */
 Residue * newResidue(const char *name, const unsigned long nr_atoms)
 {
@@ -33,9 +35,10 @@ Residue * newResidue(const char *name, const unsigned long nr_atoms)
 }
 
 /*
-* creates and initialises a new protein struct
+* Creates and initialises a new protein struct
 */
-Protein * newProtein(const char *name, const unsigned long nr_residues, const unsigned long nr_atoms)
+Protein * newProtein(const char *name, const unsigned long nr_residues,
+                     const unsigned long nr_atoms)
 {
     Protein *protein = malloc(sizeof(*protein));
     protein->residues = malloc(nr_residues * sizeof(protein->residues));
@@ -49,96 +52,9 @@ Protein * newProtein(const char *name, const unsigned long nr_residues, const un
 }
 
 /*
-* searches th file for the name of the protein
+* Opens the file and returns the filecontent as char *.
+* Returns NULL if there exists no file with the given filename.
 */
-char *getProteinName(char *filecontent)
-{
-    char *name;    
-    char *ptr;
-   
-    ptr = filecontent;
-    ptr = strstr(ptr, "COMPND   2");
-    ptr = strstr(ptr, ":");
-    name = ptr + 2;
-    ptr = strstr(name, ";");
-    *ptr = '\0';
-
-    return name; 
-}
-
-/*
-* searches every line with relevant information to save that information
-* in arrays
-*/
-void getInformation(const char ** lines, const unsigned long nr_lines, char**name,
-                    char** residues, char ** residues_number,
-                    double* coordinate1,
-                    double* coordinate2,
-                    double* coordinate3)
-{
-    unsigned long idx, idx2;
-    char * name_chars,                                                          
-         * residues_chars,                                                      
-         * residues_number_chars,
-         * coordinate1_chars,                                                   
-         * coordinate2_chars,                                                   
-         * coordinate3_chars; 
-    name_chars = malloc(5 * sizeof(char));
-    residues_chars = malloc(4 * sizeof(char));
-    residues_number_chars = malloc(5 * sizeof(char));
-    coordinate1_chars = malloc(9 * sizeof(char));
-    coordinate2_chars = malloc(9 * sizeof(char));
-    coordinate3_chars = malloc(9 * sizeof(char));
-    for(idx = 0; idx < nr_lines; idx++)
-    {
-        for(idx2 = 0; idx2 < 4; idx2++)
-        {
-            name_chars[idx2] = lines[idx][idx2 + 12];
-        }
-        name_chars[4] = '\0';
-        for(idx2 = 0; idx2 < 3; idx2++)
-        {
-            residues_chars[idx2] = lines[idx][idx2 + 17];
-        }
-        residues_chars[3] = '\0';
-        for(idx2 = 0; idx2  < 4;  idx2++)
-        {
-            residues_number_chars[idx2] = lines[idx][idx2 + 22];
-        }
-        residues_number_chars[4] = '\0';
-        for(idx2 = 0; idx2 < 8; idx2++)
-        {
-            coordinate1_chars[idx2] = lines[idx][idx2 + 30];
-        }
-        coordinate1_chars[8] = '\0';  
-        for(idx2 = 0; idx2 < 8; idx2++)
-        {
-            coordinate2_chars[idx2] = lines[idx][idx2 + 38];
-        }
-        coordinate2_chars[8] = '\0';
-        for(idx2 = 0; idx2 < 8; idx2++)
-        {
-            coordinate3_chars[idx2] = lines[idx][idx2 + 46];
-        }
-        coordinate3_chars[8] = '\0';
-        name[idx] = malloc(5*sizeof(char));
-        residues[idx] = malloc(4*sizeof(char));                          
-        residues_number[idx] = malloc(5*sizeof(char));
-        strcpy(name[idx],name_chars);
-        strcpy(residues[idx],residues_chars);
-        strcpy(residues_number[idx],residues_number_chars);
-        sscanf(coordinate1_chars,"%lf",&coordinate1[idx]);                         
-        sscanf(coordinate2_chars,"%lf",&coordinate2[idx]);                         
-        sscanf(coordinate3_chars,"%lf",&coordinate3[idx]);    
-    }
-    free(name_chars);                                                       
-    free(residues_chars);                                                   
-    free(residues_number_chars);
-    free(coordinate1_chars);                                                
-    free(coordinate2_chars);                                                
-    free(coordinate3_chars);                       
-}
- 
 char * readFromFile(const char *filename, unsigned long *filesize)
 {
     FILE *fp = fopen(filename, "r");
@@ -169,6 +85,27 @@ char * readFromFile(const char *filename, unsigned long *filesize)
     return filecontent;
 }
 
+/*
+* Searches the file for the name of the protein.
+*/
+char *getProteinName(char *filecontent)
+{
+    char *name;    
+    char *ptr;
+   
+    ptr = filecontent;
+    ptr = strstr(ptr, "COMPND   2");
+    ptr = strstr(ptr, ":");
+    name = ptr + 2;
+    ptr = strstr(name, ";");
+    *ptr = '\0';
+
+    return name; 
+}
+
+/*
+* Searches the file for lines starting with 'ATOM' and saves these lines.
+*/
 char ** getRelevantLines(char *filecontent, unsigned long *nr_lines)
 {
     unsigned long idx, nr_lines_counter;
@@ -208,6 +145,93 @@ char ** getRelevantLines(char *filecontent, unsigned long *nr_lines)
     return lines;
 }
 
+/*
+* Searches every line with relevant information to save that information
+* in arrays
+*/
+void getInformation(const char ** lines, unsigned long  *nr_lines, char**name,
+                    char** residues, char ** residues_number,
+                    double* coordinate1,
+                    double* coordinate2,
+                    double* coordinate3)
+{
+    unsigned long idx, idx2, writing_index = 0, starting_nr_lines;
+    char * name_chars,                                                          
+         * residues_chars,                                                      
+         * residues_number_chars,
+         * coordinate1_chars,                                                   
+         * coordinate2_chars,                                                   
+         * coordinate3_chars,
+        altlock = ' ';
+    name_chars = malloc(5 * sizeof(char));
+    residues_chars = malloc(4 * sizeof(char));
+    residues_number_chars = malloc(5 * sizeof(char));
+    coordinate1_chars = malloc(9 * sizeof(char));
+    coordinate2_chars = malloc(9 * sizeof(char));
+    coordinate3_chars = malloc(9 * sizeof(char));
+    starting_nr_lines = *nr_lines;
+    for(idx = 0; idx < starting_nr_lines; idx++)
+    {
+        altlock = lines[idx][16];
+        if(altlock == 'A' || altlock == ' ')
+        {
+            for(idx2 = 0; idx2 < 4; idx2++)
+            {
+                name_chars[idx2] = lines[idx][idx2 + 12];
+            }
+            name_chars[4] = '\0';
+            for(idx2 = 0; idx2 < 3; idx2++)
+            {
+                residues_chars[idx2] = lines[idx][idx2 + 17];
+            }
+            residues_chars[3] = '\0';
+            for(idx2 = 0; idx2  < 4;  idx2++)
+            {
+                residues_number_chars[idx2] = lines[idx][idx2 + 22];
+            }
+            residues_number_chars[4] = '\0';
+            for(idx2 = 0; idx2 < 8; idx2++)
+            {
+                coordinate1_chars[idx2] = lines[idx][idx2 + 30];
+            }
+            coordinate1_chars[8] = '\0';  
+            for(idx2 = 0; idx2 < 8; idx2++)
+            {
+                coordinate2_chars[idx2] = lines[idx][idx2 + 38];
+            }
+            coordinate2_chars[8] = '\0';
+            for(idx2 = 0; idx2 < 8; idx2++)
+            {
+                coordinate3_chars[idx2] = lines[idx][idx2 + 46];
+            }
+            coordinate3_chars[8] = '\0';
+            name[writing_index] = malloc(5*sizeof(char));
+            residues[writing_index] = malloc(4*sizeof(char));                          
+            residues_number[writing_index] = malloc(5*sizeof(char));
+            strcpy(name[writing_index],name_chars);
+            strcpy(residues[writing_index],residues_chars);
+            strcpy(residues_number[writing_index],residues_number_chars);
+            sscanf(coordinate1_chars,"%lf",&coordinate1[writing_index]);                         
+            sscanf(coordinate2_chars,"%lf",&coordinate2[writing_index]);                         
+            sscanf(coordinate3_chars,"%lf",&coordinate3[writing_index]);    
+            ++writing_index;
+        }
+    }
+    *nr_lines = writing_index;
+
+    free(lines);
+    free(name_chars);                                                       
+    free(residues_chars);                                                   
+    free(residues_number_chars);
+    free(coordinate1_chars);                                                
+    free(coordinate2_chars);                                                
+    free(coordinate3_chars);                       
+}
+
+/*
+* Counts the lengths of the individual residues and saves them in an array.
+* Writes the number of residues in the variable pointed to by *nr_residues.
+*/
 unsigned long *getResidueLengths(char **residues_number,
                                  const unsigned long nr_lines,
                                  unsigned long *nr_residues)
@@ -246,8 +270,13 @@ unsigned long *getResidueLengths(char **residues_number,
     return res_lengths;
 }
 
-Protein * writeInfoIntoStructs(const char **name, const char **residues, char **residues_number, 
-                               const char *protein_name, const unsigned long nr_lines,
+/*
+* Saves the information in the protein struct.
+*/
+Protein * writeInfoIntoStructs(const char **name, const char **residues, 
+                               char **residues_number,
+                               const char *protein_name, 
+                               const unsigned long nr_lines,
                                const double* coordinate1,
                                const double* coordinate2,
                                const double* coordinate3)
@@ -285,6 +314,9 @@ Protein * writeInfoIntoStructs(const char **name, const char **residues, char **
     return protein;
 }
 
+/*
+* The main method. Takes a filename as input and returns a Protein.
+*/  
 Protein* parse(const char *filename)
 {
     unsigned long nr_lines, filesize, idx, *nr_residues;
@@ -294,6 +326,7 @@ Protein* parse(const char *filename)
     Protein *protein;
 
     filecontent = readFromFile(filename, &filesize);
+    assert(filecontent != NULL);
     lines = getRelevantLines(filecontent, &nr_lines);
     protein_name = getProteinName(filecontent);
 
@@ -306,10 +339,11 @@ Protein* parse(const char *filename)
     coordinate3 = malloc(nr_lines * sizeof(double));
     nr_residues = malloc(sizeof(unsigned long));
 
-    getInformation((const char **)lines, nr_lines, name, residues, residues_number, 
-                   coordinate1, coordinate2, coordinate3);    
+    getInformation((const char **)lines, &nr_lines, name, residues,
+                    residues_number, coordinate1, coordinate2, coordinate3);    
     
-    protein = writeInfoIntoStructs((const char **) name, (const char **) residues, 
+    protein = writeInfoIntoStructs((const char **) name,
+                                   (const char **) residues, 
                                    residues_number, protein_name, nr_lines,
                                    coordinate1, coordinate2, coordinate3); 
     free(coordinate1);
@@ -326,11 +360,13 @@ Protein* parse(const char *filename)
     free(residues_number);
     free(name);
     free(residues);
-    free(lines);
 
     return protein;
 }
 
+/*
+* Method to free the allocated memory.
+*/
 void freeProteinStruct(Protein *protein)
 {
     unsigned long idx;
@@ -350,4 +386,3 @@ void freeProteinStruct(Protein *protein)
     free(protein->name);
     free(protein);    
 }
-
