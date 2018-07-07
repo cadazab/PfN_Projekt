@@ -10,7 +10,7 @@ main.x: main.o parser/parser.o angleDescriptor/angleDescriptor.o Distance/genera
 %.o: %.c
 	${CC} ${CFLAGS} -c -o $@ $^
 clean:
-	${RM} *.o
+	${RM} *.o parser/*.csv
 
 cleanup: clean
 	${RM} *.x
