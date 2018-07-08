@@ -4,6 +4,7 @@
 #include <stdbool.h>
 #include <string.h>
 #include <assert.h>
+#include <omp.h>
 
 #include "protein.h"
 #include "parser/parser.h"
@@ -51,7 +52,7 @@ void analyze_all_proteins(Descriptor *descriptor, char * const *files,
                         unsigned long numoffiles, Parsefunc parser) {
     unsigned long i;
     const char *outfile;
-
+    //#pragma omp parallel for private(outfile)
     for (i = 0; i < numoffiles; i++) {
         outfile = generate_outfile_name(files[i]);
         descriptor(files[i], outfile, parser);
