@@ -398,7 +398,7 @@ int main(void)
     unsigned long idx;
     //protein = parse("test.txt");
     //protein = parse("pdb1jm7.ent");
-    protein = parse("pdb5wf5.ent");    
+    protein = parse("pdb3s14.ent");    
     
     for(idx = 0; idx < protein->nr_atoms; ++idx)
     {
