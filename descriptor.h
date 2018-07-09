@@ -1,4 +1,6 @@
 #ifndef DESCRIPTOR_H
 #define DESCRIPTOR_H
-typedef void Descriptor (const Protein *p, const char* outfile);
+
+typedef void Descriptor (const Protein *p, const char* outfile, const void *data);
+
 #endif

@@ -98,16 +98,17 @@ void free_angle(Angle *angle){
   free(angle);
 }
 
-void angle_descriptor(const Protein *p, const char *outfile) {
-
-    Angle *angle = get_angle(p);
-    unsigned long i, n = numberOfNGrams(p, 6);
-    FILE *out = fopen(outfile, "w");
-    assert(out != NULL);
-    fprintf(out, "index, distance, angle\n");
-    for(i = 0; i < n; i++) {
-        fprintf(out, "%lu, %lf, %lf\n", i, angle[i].distance, angle[i].angle);
-    }
-    fclose(out);
-    free_angle(angle);
+void angle_descriptor(const Protein *p, const char *outfile, const void *data) { 
+  
+  (void) data;
+  Angle *angle = get_angle(p);
+  unsigned long i, n = numberOfNGrams(p, 6);
+  FILE *out = fopen(outfile, "w");
+  assert(out != NULL);
+  fprintf(out, "index, distance, angle\n");
+  for(i = 0; i < n; i++) {
+      fprintf(out, "%lu, %lf, %lf\n", i, angle[i].distance, angle[i].angle);
+  }
+  fclose(out);
+  free_angle(angle);
 }
