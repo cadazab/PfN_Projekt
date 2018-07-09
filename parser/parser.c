@@ -44,8 +44,7 @@ Protein * newProtein(const char *name, const unsigned long nr_residues,
     protein->residues = malloc(nr_residues * sizeof(protein->residues));
     protein->atoms = malloc(nr_atoms * sizeof(protein->atoms));
     protein->cAlphas = malloc(nr_residues * sizeof(protein->atoms));
-    protein->name = malloc(50 * sizeof(char));
-    strcpy(protein->name, name);
+    protein->name = strdup(name);
     protein->nr_residues = nr_residues;
     protein->nr_atoms = nr_atoms;
     return protein;
