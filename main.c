@@ -4,9 +4,9 @@
 #include <stdbool.h>
 #include <string.h>
 #include <assert.h>
-#include <omp.h>
 
 #include "protein.h"
+#include "descriptor.h"
 #include "parser/parser.h"
 #include "ngrams/nGram.h"
 #include "angleDescriptor/angleDescriptor.h"
@@ -14,9 +14,6 @@
 #define DIE() die_with_usage(argv[0]);
 
 typedef Protein* Parsefunc (const char *filename);
-typedef void Descriptor (const char *infilename, const char* outfilename,
-                        Parsefunc p);
-
 
 /*
 Generates the filename for the output file by adding a file extension
@@ -29,34 +26,20 @@ const char *generate_outfile_name(const char *filename) {
     snprintf(outputfile, length, "%s%s", filename, ending);
     return outputfile;
 }
-
-void angle_descriptor(const char *infilename, const char *outfilename,
-                    Parsefunc parser) {
-
-    Protein *p = parser(infilename);
-    Angle *angle = get_angle(p);
-    unsigned long n = numberOfNGrams(p, 6), i;
-    printf("%s\n", outfilename);
-    FILE *out = fopen(outfilename, "w");
-    assert(out != NULL);
-    fprintf(out, "index, distance, angle\n");
-    for(i = 0; i < n; i++) {
-        fprintf(out, "%lu, %lf, %lf\n", i, angle[i].distance, angle[i].angle);
-    }
-    fclose(out);
-    freeProteinStruct(p);
-    free_angle(angle);
-}
-
+/*
+Reads in a protein by using parser and creates output by calling descriptor
+for each file in files
+*/
 void analyze_all_proteins(Descriptor *descriptor, char * const *files,
                         unsigned long numoffiles, Parsefunc parser) {
     unsigned long i;
-    const char *outfile;
-    //#pragma omp parallel for private(outfile)
+    Protein *p;
     for (i = 0; i < numoffiles; i++) {
-        outfile = generate_outfile_name(files[i]);
-        descriptor(files[i], outfile, parser);
+        const char *outfile = generate_outfile_name(files[i]);
+        p = parser(files[i]);
+        descriptor(p , outfile);
         free((void*) outfile);
+        freeProteinStruct(p);
     }
 
 }
@@ -136,7 +119,7 @@ char **parse_files(char **inputfiles, unsigned long *filestarts,
 }
 
 /*
-this function parses the options from argc to flags
+this function parses the options from argc to flags and n
 argv gets permuted by getopt
 */
 void parse_options(int argc, char **argv, bool *flags, unsigned int *n) {
@@ -210,7 +193,7 @@ int main(int argc, char *argv[]){
     }
     else {
 
-        // TODO call real descriptor functions
+        // TODO call real angle descriptor
         if(nflag) {
             printf("N-Grams descriptor with %u will be started here\n", n);
         }

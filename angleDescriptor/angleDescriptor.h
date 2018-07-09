@@ -1,18 +1,11 @@
 #ifndef ANGLEDESCRIPTOR_H
 #define ANGLEDESCRIPTOR_H
 
-typedef struct {
-  double angle;
-  double distance;
-} Angle;
+#include "../descriptor.h"
 
-//Return the angle between the planes
-//created by an ngram
-Angle* get_angle(Protein *protein);
-
-//Free the memory
-void free_angle(Angle *angle);
-
+// calculate the angle between the planes created by an ngram
+// and write result as csv to outfile
+Descriptor angle_descriptor;
 
 #endif
 

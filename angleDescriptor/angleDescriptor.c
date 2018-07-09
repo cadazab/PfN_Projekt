@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
+#include <assert.h>
 
 #include "../protein.h"
 #include "../ngrams/nGram.h"
@@ -12,6 +13,10 @@ typedef struct Vector{
   double z;
 }Vector;
 
+typedef struct {
+  double angle;
+  double distance;
+} Angle;
 
 
 Vector cross_product(Vector a, Vector b){
@@ -66,7 +71,7 @@ Vector create_vector(Atom atom){
   return result;
 }
 
-Angle *get_angle(Protein *protein){
+Angle *get_angle(const Protein *protein){
   Angle* result;
   unsigned long nr_ngrams = numberOfNGrams(protein,6);
   result = malloc(sizeof(*result) * nr_ngrams);
@@ -92,25 +97,17 @@ Angle *get_angle(Protein *protein){
 void free_angle(Angle *angle){
   free(angle);
 }
-/**
-int main(int argc, char *argv[]){
-  Vector a;
-  Vector b;
-  Vector c;
-  Vector d;
-  a.x=1;
-  a.y=0;
-  a.z=1;
-  b.x=0;
-  b.y=0;
-  b.z=0;
-  c.x=0;
-  c.y=1;
-  c.z=0;
-  d.x=0;
-  d.y=1;
-  d.z=1;
-  printf("angle:%f°\n",angle(a,b,c,d));
-  return EXIT_SUCCESS;
+
+void angle_descriptor(const Protein *p, const char *outfile) {
+
+    Angle *angle = get_angle(p);
+    unsigned long i, n = numberOfNGrams(p, 6);
+    FILE *out = fopen(outfile, "w");
+    assert(out != NULL);
+    fprintf(out, "index, distance, angle\n");
+    for(i = 0; i < n; i++) {
+        fprintf(out, "%lu, %lf, %lf\n", i, angle[i].distance, angle[i].angle);
+    }
+    fclose(out);
+    free_angle(angle);
 }
- */ 
