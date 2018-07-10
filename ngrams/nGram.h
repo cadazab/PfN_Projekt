@@ -1,6 +1,6 @@
 #ifndef NGRAM_H
 #define NGRAM_H
-
+#include "../protein.h"
 typedef struct {
     Atom **cAlphas;
     Atom *central_cAlpha;

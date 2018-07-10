@@ -4,7 +4,7 @@ CFLAGS+=-g -Wall -Werror -Wunused-parameter -Wunused-variable
 
 all: main.x
 
-main.x: main.o parser/parser.o angleDescriptor/angleDescriptor.o Distance/generateNGrams.o
+main.x: main.o parser/parser.o angleDescriptor/angleDescriptor.o ngrams/generateNGrams.o Distance/distance.o
 	${CC} -o $@ $^ -lm
 
 %.o: %.c

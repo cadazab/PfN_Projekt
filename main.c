@@ -10,6 +10,7 @@
 #include "parser/parser.h"
 #include "ngrams/nGram.h"
 #include "angleDescriptor/angleDescriptor.h"
+#include "Distance/distance.h"
 
 #define DIE() die_with_usage(argv[0]);
 
@@ -29,15 +30,18 @@ const char *generate_outfile_name(const char *filename) {
 /*
 Reads in a protein by using parser and creates output by calling descriptor
 for each file in files
+
+every protein gets the same data at the moment
 */
 void analyze_all_proteins(Descriptor *descriptor, char * const *files,
-                        unsigned long numoffiles, Parsefunc parser) {
+                        unsigned long numoffiles, Parsefunc parser,
+                        const void *data) {
     unsigned long i;
     Protein *p;
     for (i = 0; i < numoffiles; i++) {
         const char *outfile = generate_outfile_name(files[i]);
         p = parser(files[i]);
-        descriptor(p , outfile);
+        descriptor(p , outfile, data);
         free((void*) outfile);
         freeProteinStruct(p);
     }
@@ -122,7 +126,7 @@ char **parse_files(char **inputfiles, unsigned long *filestarts,
 this function parses the options from argc to flags and n
 argv gets permuted by getopt
 */
-void parse_options(int argc, char **argv, bool *flags, unsigned int *n) {
+void parse_options(int argc, char **argv, bool *flags, unsigned long *n) {
     const char* options = "tn:f";
     char c;
     long ninput;
@@ -156,7 +160,7 @@ int main(int argc, char *argv[]){
     // order is the same as in string options in the function
     bool flags[] = {false, false, false};
 
-    unsigned int n, i;
+    unsigned long n, i;
     char **inputfiles;
     // we save the pointer to the memory containing a
     // single files content to free it later correctly
@@ -165,6 +169,7 @@ int main(int argc, char *argv[]){
     // Initilize function pointer
     Parsefunc *parser = &parse;
     Descriptor *descriptor = NULL;
+    void *descdata = NULL;
 
 
     parse_options(argc, argv, flags, &n);
@@ -193,16 +198,28 @@ int main(int argc, char *argv[]){
     }
     else {
 
-        // TODO call real angle descriptor
         if(nflag) {
-            printf("N-Grams descriptor with %u will be started here\n", n);
+            DistanceData *distancedata = malloc(sizeof (DistanceData));
+            assert(distancedata != NULL);
+            printf("N-Grams descriptor with %lu will be started here\n", n);
+            descriptor = &distance_descriptor;
+            distancedata->n = n;
+            // TODO parse radius somehow
+            distancedata ->radius = 100;
+            descdata = (void *) distancedata;
         }
         else {
             printf("Angle descriptor will be started here\n");
             descriptor = &angle_descriptor;
 
         }
-        analyze_all_proteins(descriptor, inputfiles, numoffiles, parser);
+        analyze_all_proteins(descriptor, inputfiles, numoffiles, parser,
+                            descdata);
+
+        if(descdata != NULL) {
+            // for now we can just use normal free
+            free(descdata);
+        }
 
         // we need to free the memory used for the input files in this case
         if(fflag) {
