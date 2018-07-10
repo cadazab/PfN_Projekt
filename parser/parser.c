@@ -8,6 +8,20 @@
 #include "../protein.h"
 
 /*
+* Checks if the given variable is NULL. Prints out an error message
+* and ends the programm if it is true.
+*/
+void assertNULL(void* variable)
+{
+    if(variable == NULL)
+    {
+        fprintf(stderr, "One value was not initialised. Please check"
+                " if your file matches the conventions.\n");
+        exit(EXIT_FAILURE);
+    }
+}
+
+/*
 * Creates and initialises a new atom struct
 */
 Atom * newAtom(const char *name, const double x,
@@ -97,12 +111,12 @@ char *getProteinName(char *filecontent)
    
     ptr = filecontent;
     ptr = strstr(ptr, "COMPND   2");
-    assert(ptr);
+    assertNULL(ptr);
     ptr = strstr(ptr, ":");
-    assert(ptr);
+    assertNULL(ptr);
     name = ptr + 2;
     ptr = strstr(name, ";");
-    assert(ptr);
+    assertNULL(ptr);
     *ptr = '\0';
 
     return name; 
@@ -156,7 +170,7 @@ char ** getRelevantLines(char *filecontent, unsigned long *nr_lines)
 * in the given arrays
 */
 void getInformation(const char ** lines, unsigned long  *nr_lines, char**name,
-                    char** residues, char ** residues_number,
+                    char** residues, unsigned long* residues_number,
                     double* coordinate1,
                     double* coordinate2,
                     double* coordinate3)
@@ -256,13 +270,13 @@ void getInformation(const char ** lines, unsigned long  *nr_lines, char**name,
             */ 
             name[actual_idx] = malloc(5*sizeof(char));
             residues[actual_idx] = malloc(4*sizeof(char));                          
-            residues_number[actual_idx] = malloc(5*sizeof(char));
             /*
             * writing the temporay informations into the saving arrays
             */
             strcpy(name[actual_idx],name_chars);
             strcpy(residues[actual_idx],residues_chars);
-            strcpy(residues_number[actual_idx],residues_number_chars);
+            assert(EOF != sscanf(residues_number_chars,"%lu",
+                   &residues_number[actual_idx]));
             assert(EOF != sscanf(coordinate1_chars,"%lf",
                    &coordinate1[actual_idx]));                         
             assert(EOF != sscanf(coordinate2_chars,"%lf",
@@ -294,18 +308,17 @@ void getInformation(const char ** lines, unsigned long  *nr_lines, char**name,
 * Counts the lengths of the individual residues and saves them in an array.
 * Writes the number of residues in the variable pointed to by *nr_residues.
 */
-unsigned long *getResidueLengths(char **residues_number,
+unsigned long *getResidueLengths(unsigned long *residues_number,
                                  const unsigned long nr_lines,
                                  unsigned long *nr_residues)
 {
-    unsigned long atom_idx, res_idx, nr_residues_counter, *res_lengths;
-    char *temp;
+    unsigned long atom_idx, res_idx, nr_residues_counter, *res_lengths, temp;
    
     temp = residues_number[0];
     nr_residues_counter = 1;
     for(atom_idx = 1; atom_idx < nr_lines; ++atom_idx)
     {
-        if(strcmp(residues_number[atom_idx], temp))
+        if(residues_number[atom_idx] != temp)
         {
             ++nr_residues_counter;
             temp = residues_number[atom_idx];
@@ -316,7 +329,7 @@ unsigned long *getResidueLengths(char **residues_number,
     res_idx = 0;
     for(atom_idx = 0; atom_idx < nr_lines; ++atom_idx)
     {
-        if(!strcmp(residues_number[atom_idx], temp))
+        if(residues_number[atom_idx] == temp)
         {
             ++res_lengths[res_idx]; 
         }
@@ -336,7 +349,7 @@ unsigned long *getResidueLengths(char **residues_number,
 * Saves the information in the protein struct.
 */
 Protein * writeInfoIntoStructs(const char **name, const char **residues, 
-                               char **residues_number,
+                               unsigned long *residues_number,
                                const char *protein_name, 
                                const unsigned long nr_lines,
                                const double* coordinate1,
@@ -382,9 +395,8 @@ Protein * writeInfoIntoStructs(const char **name, const char **residues,
 */  
 Protein* parse(char *filename)
 {
-    unsigned long nr_lines, filesize, idx, *nr_residues;
-    char *filecontent, *protein_name, **lines, **name, **residues,
-         **residues_number;
+    unsigned long nr_lines, filesize, idx, *nr_residues, *residues_number;
+    char *filecontent, *protein_name, **lines, **name, **residues;
     double *coordinate1, *coordinate2, *coordinate3;
     Protein *protein;
 
@@ -397,7 +409,7 @@ Protein* parse(char *filename)
     /* create the arrays to store the relevant information */
     name = malloc(nr_lines * sizeof(char*));
     residues = malloc(nr_lines * sizeof(char*));
-    residues_number = malloc(nr_lines * sizeof(char*));
+    residues_number = malloc(nr_lines * sizeof(unsigned long));
     coordinate1 = malloc(nr_lines * sizeof(double));    
     coordinate2 = malloc(nr_lines * sizeof(double));
     coordinate3 = malloc(nr_lines * sizeof(double));
@@ -411,22 +423,22 @@ Protein* parse(char *filename)
                                    residues_number, protein_name, nr_lines,
                                    coordinate1, coordinate2, coordinate3);
 
-    assert(protein);
+    assertNULL(protein);
     for(idx = 0; idx < protein->nr_residues; idx++)
     {
-        assert(protein->residues[idx]->name);
-        assert(protein->residues[idx]);
-        assert(protein->cAlphas[idx]);
+        assertNULL(protein->residues[idx]->name);
+        assertNULL(protein->residues[idx]);
+        assertNULL(protein->cAlphas[idx]);
     }
     for(idx = 0; idx < protein->nr_atoms; idx++)
     {
-        assert(protein->atoms[idx]->name);
-        assert(protein->atoms[idx]);
+        assertNULL(protein->atoms[idx]->name);
+        assertNULL(protein->atoms[idx]);
     }
-    assert(protein->cAlphas);
-    assert(protein->atoms);
-    assert(protein->residues);
-    assert(protein->name);
+    assertNULL(protein->cAlphas);
+    assertNULL(protein->atoms);
+    assertNULL(protein->residues);
+    assertNULL(protein->name);
 
     free(coordinate1);
     free(coordinate2);
@@ -436,7 +448,6 @@ Protein* parse(char *filename)
     {
         free(name[idx]);
         free(residues[idx]);
-        free(residues_number[idx]);
     }
     free(filecontent);
     free(residues_number);
@@ -451,25 +462,25 @@ Protein* parse(char *filename)
 void freeProteinStruct(Protein *protein)
 {
     unsigned long idx;
-    assert(protein);
+    assertNULL(protein);
     for(idx = 0; idx < protein->nr_residues; idx++)
     {
-        assert(protein->residues[idx]->name);
-        assert(protein->residues[idx]);
+        assertNULL(protein->residues[idx]->name);
+        assertNULL(protein->residues[idx]);
         free(protein->residues[idx]->name);
         free(protein->residues[idx]);
     }
     for(idx = 0; idx < protein->nr_atoms; idx++)
     {
-        assert(protein->atoms[idx]->name);
-        assert(protein->atoms[idx]);
+        assertNULL(protein->atoms[idx]->name);
+        assertNULL(protein->atoms[idx]);
         free(protein->atoms[idx]->name);
         free(protein->atoms[idx]);
     }
-    assert(protein->cAlphas);
-    assert(protein->atoms);
-    assert(protein->residues);
-    assert(protein->name);
+    assertNULL(protein->cAlphas);
+    assertNULL(protein->atoms);
+    assertNULL(protein->residues);
+    assertNULL(protein->name);
 
     free(protein->cAlphas);
     free(protein->atoms);
@@ -488,6 +499,7 @@ int main(void)
     protein = parse("test.txt");
     //protein = parse("pdb1jm7.ent");
     //protein = parse("pdb3s14.ent");    
+    //protein = parse("pdb2w7n.ent");
 
     if(protein == NULL)
     {
