@@ -161,7 +161,8 @@ void getInformation(const char ** lines, unsigned long  *nr_lines, char**name,
                     double* coordinate2,
                     double* coordinate3)
 {
-    unsigned long idx, idx2, writing_index = 0, starting_nr_lines;
+    unsigned long idx, idx2, nofspaces = 0, actual_idx = 0, 
+                  starting_nr_lines;
     char * name_chars,                                                          
          * residues_chars,                                                      
          * residues_number_chars,
@@ -199,7 +200,15 @@ void getInformation(const char ** lines, unsigned long  *nr_lines, char**name,
             */
             for(idx2 = 0; idx2 < 4; idx2++)
             {
-                name_chars[idx2] = lines[idx][idx2 + 12];
+                if(lines[idx][idx2 + 12] == ' ')
+                {
+                    name_chars[3 - nofspaces] = lines[idx][idx2 + 12];
+                    nofspaces++;
+                }
+                else
+                {
+                    name_chars[idx2 - nofspaces] = lines[idx][idx2 + 12];
+                }
             }
             name_chars[4] = '\0';
             /*
@@ -245,29 +254,30 @@ void getInformation(const char ** lines, unsigned long  *nr_lines, char**name,
             /*
             * allocating the saving spot for every parameter
             */ 
-            name[writing_index] = malloc(5*sizeof(char));
-            residues[writing_index] = malloc(4*sizeof(char));                          
-            residues_number[writing_index] = malloc(5*sizeof(char));
+            name[actual_idx] = malloc(5*sizeof(char));
+            residues[actual_idx] = malloc(4*sizeof(char));                          
+            residues_number[actual_idx] = malloc(5*sizeof(char));
             /*
             * writing the temporay informations into the saving arrays
             */
-            strcpy(name[writing_index],name_chars);
-            strcpy(residues[writing_index],residues_chars);
-            strcpy(residues_number[writing_index],residues_number_chars);
+            strcpy(name[actual_idx],name_chars);
+            strcpy(residues[actual_idx],residues_chars);
+            strcpy(residues_number[actual_idx],residues_number_chars);
             assert(EOF != sscanf(coordinate1_chars,"%lf",
-                   &coordinate1[writing_index]));                         
+                   &coordinate1[actual_idx]));                         
             assert(EOF != sscanf(coordinate2_chars,"%lf",
-                   &coordinate2[writing_index]));                         
+                   &coordinate2[actual_idx]));                         
             assert(EOF != sscanf(coordinate3_chars,"%lf",
-                   &coordinate3[writing_index]));    
-            ++writing_index;
+                   &coordinate3[actual_idx]));    
+            ++actual_idx;
+            nofspaces = 0;
         }
     }
     /*
     * saving the new number of really used lines (can be different from
     * before because there may be lines ignored because of the altlock)
     */
-    *nr_lines = writing_index;
+    *nr_lines = actual_idx;
     /*
     * freeing the temporary arrays and lines which is no longer used
     */
